@@ -210,7 +210,13 @@ body.keyboard-open main{padding-bottom:16px;}
 const SUPABASE_URL='https://vdbsyriaxijphnqkcbag.supabase.co';
 const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkYnN5cmlheGlqcGhucWtjYmFnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzMzc1MzUsImV4cCI6MjA5NjkxMzUzNX0.yTbee4O0G8ypAX2363mOdlFr2p0neYQSq4j8eXrySCk';
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-const UNITS=['kg','g','litre','ml','pcs','pack','box','dozen','roll','bottle','bag','sheet','metre'];
+const UNITS=['pcs','kg','g','litre','ml','pack','box','dozen','roll','bottle','bag','sheet','metre'];
+
+// BACK BUTTON — go to search first, then block
+window.addEventListener('popstate',()=>{
+  if(currentPage!=='search'){setPage('search');history.pushState(null,'',location.href);}
+  else{history.pushState(null,'',location.href);}
+});
 const ELEC_DEMAND_CHARGE=6*42;
 const ELEC_ALERT_THRESHOLD=80;
 const GAS_METER_CHARGE=200;
@@ -739,6 +745,7 @@ async function deleteCategory(id,name){
 }
 
 async function init(){
+  history.pushState(null,'',location.href); // lock back button
   initTheme();
   document.getElementById('main').innerHTML=`<div class="loading">Loading…</div>`;
   await loadCategories();render();
