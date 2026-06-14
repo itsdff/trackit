@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Purchase Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --bg: #F7F6F3; --surface: #FFFFFF; --surface2: #F0EEE9; --border: #E2DDD6;
+    --text: #1A1916; --text-muted: #7A7670; --accent: #2563EB; --accent-light: #EFF6FF;
+    --elec: #F59E0B; --elec-light: #FFFBEB; --gas: #10B981; --gas-light: #ECFDF5;
+    --danger: #DC2626; --warn: #D97706; --warn-light: #FFFBEB;
+    --radius: 12px; --radius-sm: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+  nav { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 16px; position: sticky; top: 0; z-index: 100; }
+  .nav-inner { max-width: 600px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; height: 56px; }
+  .nav-logo { font-family: 'Sora', sans-serif; font-size: 18px; font-weight: 700; }
+  .nav-logo span { color: var(--accent); }
+  .tabs { display: flex; gap: 4px; }
+  .tab { padding: 6px 12px; border-radius: 20px; border: none; background: transparent; font-size: 13px; font-weight: 500; color: var(--text-muted); cursor: pointer; transition: all 0.15s; }
+  .tab.active { background: var(--accent); color: #fff; }
+  main { max-width: 600px; margin: 0 auto; padding: 16px 16px 90px; }
+
+  /* CARDS */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; }
+  .card-title { font-family: 'Sora', sans-serif; font-size: 15px; font-weight: 700; margin-bottom: 12px; }
+
+  /* SEARCH */
+  .search-wrap { position: relative; margin-bottom: 16px; }
+  .search-wrap input { width: 100%; padding: 12px 16px 12px 42px; border: 1.5px solid var(--border); border-radius: var(--radius); font-size: 15px; background: var(--surface); outline: none; transition: border 0.15s; }
+  .search-wrap input:focus { border-color: var(--accent); }
+  .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
+  .search-results { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-top: 4px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+  .search-result-item { padding: 12px 16px; cursor: pointer; border-bottom: 1px solid var(--border); transition: background 0.1s; }
+  .search-result-item:last-child { border-bottom: none; }
+  .search-result-item:hover { background: var(--bg); }
+  .sri-name { font-weight: 600; font-size: 14px; }
+  .sri-meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+  /* SUMMARY */
+  .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; }
+  .stat-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .stat-value { font-family: 'Sora', sans-serif; font-size: 22px; font-weight: 700; margin-top: 4px; }
+  .stat-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .cat-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .cat-name { font-size: 13px; font-weight: 500; width: 110px; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cat-bar-wrap { flex: 1; height: 8px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
+  .cat-bar { height: 100%; border-radius: 4px; background: var(--accent); }
+  .cat-amt { font-size: 12px; font-weight: 600; color: var(--text-muted); width: 70px; text-align: right; flex-shrink: 0; }
+  .top-item-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .top-item-row:last-child { border-bottom: none; }
+  .ti-name { font-size: 13px; font-weight: 600; }
+  .ti-meta { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .ti-price { font-size: 14px; font-weight: 700; color: var(--accent); }
+
+  /* ALERTS */
+  .alert { border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: 8px; display: flex; align-items: flex-start; gap: 10px; }
+  .alert.warn { background: var(--warn-light); border: 1px solid #FDE68A; }
+  .alert.danger { background: #FEF2F2; border: 1px solid #FECACA; }
+  .alert.info { background: var(--accent-light); border: 1px solid #BFDBFE; }
+  .alert-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+  .alert-text { font-size: 13px; line-height: 1.5; }
+  .alert-text strong { font-weight: 600; }
+
+  /* ITEM DETAIL */
+  .item-detail { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 16px; }
+  .item-detail-header { padding: 16px; border-bottom: 1px solid var(--border); }
+  .item-name-big { font-family: 'Sora', sans-serif; font-size: 18px; font-weight: 700; }
+  .item-price-row { display: flex; align-items: flex-end; justify-content: space-between; margin-top: 10px; }
+  .latest-price { font-family: 'Sora', sans-serif; font-size: 26px; font-weight: 700; color: var(--accent); }
+  .unit-price-pill { background: var(--accent-light); color: var(--accent); font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 20px; }
+  .price-label { font-size: 11px; color: var(--text-muted); }
+  .history-row { padding: 12px 16px; border-bottom: 1px solid var(--border); display: grid; grid-template-columns: 72px 1fr auto; gap: 8px; align-items: start; }
+  .history-row:last-child { border-bottom: none; }
+  .h-date { font-size: 12px; color: var(--text-muted); }
+  .h-price { font-weight: 700; font-size: 15px; }
+  .h-unit-price { font-size: 11px; color: var(--accent); font-weight: 600; margin-top: 1px; }
+  .h-meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .h-badge { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 20px; white-space: nowrap; align-self: start; }
+  .h-badge.up { background: #FEE2E2; color: var(--danger); }
+  .h-badge.down { background: #D1FAE5; color: #065F46; }
+  .h-badge.same { background: var(--surface2); color: var(--text-muted); }
+  .back-btn { display: flex; align-items: center; gap: 6px; background: none; border: none; font-size: 13px; color: var(--accent); font-weight: 500; cursor: pointer; margin-bottom: 12px; padding: 0; }
+
+  /* FORM */
+  .form-sheet { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .form-header { padding: 16px; border-bottom: 1px solid var(--border); }
+  .form-body { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  label { font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px; }
+  input, select { width: 100%; padding: 11px 12px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 15px; font-family: 'Inter', sans-serif; background: var(--surface); color: var(--text); outline: none; transition: border 0.15s; -webkit-appearance: none; }
+  input:focus, select:focus { border-color: var(--accent); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .form-footer { padding: 16px; border-top: 1px solid var(--border); }
+  .btn { width: 100%; padding: 14px; border: none; border-radius: var(--radius-sm); font-size: 15px; font-weight: 600; cursor: pointer; transition: opacity 0.15s; }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { opacity: 0.88; }
+  .btn-sm { width: auto; padding: 9px 16px; font-size: 14px; }
+  .btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--text); }
+  .new-cat-inline { display: flex; gap: 8px; margin-top: 8px; align-items: center; }
+  .new-cat-inline input { flex: 1; padding: 9px 12px; font-size: 14px; }
+
+  /* UTILITY SPECIFIC */
+  .util-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+  .util-btn { padding: 12px; border-radius: var(--radius-sm); border: 2px solid var(--border); background: var(--surface); font-size: 14px; font-weight: 600; cursor: pointer; text-align: center; transition: all 0.15s; }
+  .util-btn.elec.active { border-color: var(--elec); background: var(--elec-light); color: var(--elec); }
+  .util-btn.gas.active { border-color: var(--gas); background: var(--gas-light); color: var(--gas); }
+  .util-btn:not(.active) { color: var(--text-muted); }
+
+  .util-hero { border-radius: var(--radius); padding: 20px; margin-bottom: 12px; }
+  .util-hero.elec { background: var(--elec-light); border: 1px solid #FDE68A; }
+  .util-hero.gas { background: var(--gas-light); border: 1px solid #6EE7B7; }
+  .util-hero-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); }
+  .util-hero-value { font-family: 'Sora', sans-serif; font-size: 32px; font-weight: 700; margin: 4px 0; }
+  .util-hero-value.elec { color: var(--elec); }
+  .util-hero-value.gas { color: var(--gas); }
+  .util-hero-sub { font-size: 12px; color: var(--text-muted); }
+
+  .util-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .util-stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; }
+  .util-stat-label { font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; }
+  .util-stat-value { font-family: 'Sora', sans-serif; font-size: 18px; font-weight: 700; margin-top: 4px; }
+  .util-stat-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+  .reading-row { padding: 10px 16px; border-bottom: 1px solid var(--border); display: grid; grid-template-columns: 80px 1fr 1fr; gap: 8px; align-items: center; }
+  .reading-row:last-child { border-bottom: none; }
+  .rr-date { font-size: 12px; color: var(--text-muted); }
+  .rr-balance { font-weight: 700; font-size: 14px; }
+  .rr-consumed { font-size: 12px; color: var(--text-muted); text-align: right; }
+  .rr-consumed.high { color: var(--danger); font-weight: 600; }
+  .rr-interp { font-size: 10px; color: var(--text-muted); font-style: italic; }
+
+  /* MANAGE */
+  .cat-tag { display: inline-flex; align-items: center; gap: 6px; background: var(--surface2); border-radius: 20px; padding: 4px 12px; font-size: 13px; margin: 4px; }
+  .cat-tag-del { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 14px; line-height: 1; }
+
+  /* MONTH FILTER */
+  .month-filter { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 12px; scrollbar-width: none; }
+  .month-filter::-webkit-scrollbar { display: none; }
+  .month-chip { padding: 6px 14px; border-radius: 20px; border: 1.5px solid var(--border); background: var(--surface); font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap; transition: all 0.15s; }
+  .month-chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  /* BOTTOM NAV */
+  .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 1px solid var(--border); display: flex; z-index: 100; }
+  .bnav-item { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 8px 0 10px; font-size: 10px; font-weight: 600; color: var(--text-muted); cursor: pointer; gap: 3px; transition: color 0.15s; border: none; background: none; }
+  .bnav-item.active { color: var(--accent); }
+  .bnav-icon { font-size: 18px; }
+
+  /* MISC */
+  .empty { text-align: center; padding: 40px 20px; color: var(--text-muted); }
+  .empty-icon { font-size: 36px; margin-bottom: 8px; }
+  .empty p { font-size: 14px; }
+  .loading { text-align: center; padding: 30px; color: var(--text-muted); font-size: 14px; }
+  .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: #1A1916; color: #fff; padding: 10px 20px; border-radius: 20px; font-size: 13px; font-weight: 500; z-index: 999; opacity: 0; transition: opacity 0.3s; pointer-events: none; white-space: nowrap; }
+  .toast.show { opacity: 1; }
+  body.keyboard-open .bottom-nav { display: none; }
+  body.keyboard-open main { padding-bottom: 16px; }
+  .divider { height: 1px; background: var(--border); margin: 4px 0 12px; }
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-inner">
+    <div class="nav-logo">track<span>it</span></div>
+    <div class="tabs">
+      <button class="tab active" onclick="switchContext('Home')">🏠 Home</button>
+      <button class="tab" onclick="switchContext('Office')">🏢 Office</button>
+    </div>
+  </div>
+</nav>
+<main id="main"></main>
+<div class="bottom-nav">
+  <button class="bnav-item active" id="bnav-search" onclick="setPage('search')"><span class="bnav-icon">🔍</span>Search</button>
+  <button class="bnav-item" id="bnav-add" onclick="setPage('add')"><span class="bnav-icon">➕</span>Add</button>
+  <button class="bnav-item" id="bnav-summary" onclick="setPage('summary')"><span class="bnav-icon">📊</span>Summary</button>
+  <button class="bnav-item" id="bnav-utility" onclick="setPage('utility')"><span class="bnav-icon">⚡</span>Utilities</button>
+  <button class="bnav-item" id="bnav-manage" onclick="setPage('manage')"><span class="bnav-icon">⚙️</span>Manage</button>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+const SUPABASE_URL = 'https://vdbsyriaxijphnqkcbag.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkYnN5cmlheGlqcGhucWtjYmFnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzMzc1MzUsImV4cCI6MjA5NjkxMzUzNX0.yTbee4O0G8ypAX2363mOdlFr2p0neYQSq4j8eXrySCk';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const UNITS = ['kg','g','litre','ml','pcs','pack','box','dozen','roll','bottle','bag','sheet','metre'];
+
+// Electricity constants
+const ELEC_DEMAND_KW = 6;
+const ELEC_DEMAND_RATE = 42; // taka per kw
+const ELEC_DEMAND_CHARGE = ELEC_DEMAND_KW * ELEC_DEMAND_RATE; // 252 taka/month fixed
+const ELEC_ALERT_THRESHOLD = 80; // alert when balance below this
+
+// Gas constants
+const GAS_METER_CHARGE = 200; // taka/month fixed
+const GAS_RATE = 18; // taka per m3
+
+let currentContext = 'Home';
+let currentPage = 'search';
+let currentUtilType = 'electricity';
+let categories = [];
+let searchTimeout = null;
+let selectedMonth = new Date().toISOString().slice(0, 7);
+
+// Keyboard fix
+if (window.visualViewport) {
+  let lastH = window.visualViewport.height;
+  window.visualViewport.addEventListener('resize', () => {
+    const h = window.visualViewport.height;
+    if (h < lastH - 100) {
+      document.body.classList.add('keyboard-open');
+      setTimeout(() => { const el = document.activeElement; if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 100);
+    } else { document.body.classList.remove('keyboard-open'); }
+    lastH = h;
+  });
+}
+
+function switchContext(ctx) {
+  currentContext = ctx;
+  document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', (i===0&&ctx==='Home')||(i===1&&ctx==='Office')));
+  loadCategories().then(() => render());
+}
+
+function setPage(p) {
+  currentPage = p;
+  document.querySelectorAll('.bnav-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('bnav-' + p)?.classList.add('active');
+  render();
+}
+
+async function loadCategories() {
+  const { data } = await sb.from('categories').select('*').eq('context', currentContext).order('name');
+  categories = data || [];
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function fmt(n) { return '৳' + Number(n).toLocaleString('en-BD'); }
+function fmtDate(d) { return new Date(d).toLocaleDateString('en-BD', { day: 'numeric', month: 'short', year: 'numeric' }); }
+function fmtDateShort(d) { return new Date(d).toLocaleDateString('en-BD', { day: 'numeric', month: 'short' }); }
+function calcUnitPrice(price, qty, unit) {
+  if (!qty || qty <= 0 || !unit) return null;
+  return fmt(Math.round((price/qty)*100)/100) + ' / ' + unit;
+}
+function getMonths() {
+  const months = []; const now = new Date();
+  for (let i = 0; i < 6; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+    months.push({ label: d.toLocaleDateString('en-BD',{month:'short',year:'numeric'}), value:`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}` });
+  }
+  return months;
+}
+function esc(s) { return s.replace(/'/g,"\\'").replace(/"/g,'&quot;'); }
+function daysInMonth(ym) { const [y,m]=ym.split('-').map(Number); return new Date(y,m,0).getDate(); }
+function today() { return new Date().toISOString().split('T')[0]; }
+function daysRemaining(ym) {
+  const [y,m]=ym.split('-').map(Number);
+  const end = new Date(y,m,0);
+  const now = new Date();
+  const diff = Math.ceil((end - now) / 86400000);
+  return Math.max(0, diff);
+}
+
+function render() {
+  if (currentPage==='search') renderSearch();
+  else if (currentPage==='add') renderAdd();
+  else if (currentPage==='summary') renderSummary();
+  else if (currentPage==='utility') renderUtility();
+  else if (currentPage==='manage') renderManage();
+}
+
+// ── SEARCH ───────────────────────────────────────────────
+function renderSearch() {
+  document.getElementById('main').innerHTML = `
+    <div class="search-wrap">
+      <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="search-input" placeholder="Search items e.g. rice, soap, banner…" oninput="handleSearch(this.value)" autocomplete="off" />
+    </div>
+    <div id="search-results"></div>
+    <div id="recent-section"></div>`;
+  loadRecent();
+}
+
+async function loadRecent() {
+  const catIds = categories.map(c=>c.id);
+  if (!catIds.length) { document.getElementById('recent-section').innerHTML=`<div class="empty"><div class="empty-icon">📦</div><p>No items yet. Add your first purchase!</p></div>`; return; }
+  const { data: items } = await sb.from('items').select('id,name,category_id').in('category_id',catIds).order('created_at',{ascending:false}).limit(20);
+  if (!items?.length) { document.getElementById('recent-section').innerHTML=`<div class="empty"><div class="empty-icon">📦</div><p>No items yet.</p></div>`; return; }
+  const itemIds=items.map(i=>i.id);
+  const { data: purchases } = await sb.from('purchases').select('item_id,price,quantity,unit,purchased_at').in('item_id',itemIds).order('purchased_at',{ascending:false});
+  const latestMap={};
+  (purchases||[]).forEach(p=>{if(!latestMap[p.item_id])latestMap[p.item_id]=p;});
+  const catMap=Object.fromEntries(categories.map(c=>[c.id,c.name]));
+  let html=`<div style="font-size:13px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Recent Items</div>`;
+  items.forEach(item=>{
+    const lp=latestMap[item.id];
+    const up=lp?calcUnitPrice(lp.price,lp.quantity,lp.unit):null;
+    html+=`<div class="card" style="padding:12px 16px;cursor:pointer;margin-bottom:8px;" onclick="showItemDetail('${item.id}','${esc(item.name)}')">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+        <div><div style="font-weight:600;font-size:14px;">${item.name}</div><div style="font-size:12px;color:var(--text-muted);margin-top:2px;">${catMap[item.category_id]||''}</div></div>
+        <div style="text-align:right;flex-shrink:0;">
+          ${lp?`<div style="font-weight:700;font-size:16px;color:var(--accent);">${fmt(lp.price)}</div>${up?`<div style="font-size:11px;color:var(--accent);font-weight:600;margin-top:1px;">${up}</div>`:''}<div style="font-size:11px;color:var(--text-muted);">${fmtDate(lp.purchased_at)}</div>`:`<div style="font-size:12px;color:var(--text-muted);">No purchases</div>`}
+        </div>
+      </div></div>`;
+  });
+  document.getElementById('recent-section').innerHTML=html;
+}
+
+async function handleSearch(q) {
+  clearTimeout(searchTimeout);
+  if (!q.trim()) { document.getElementById('search-results').innerHTML=''; loadRecent(); return; }
+  document.getElementById('recent-section').innerHTML='';
+  searchTimeout=setTimeout(async()=>{
+    const catIds=categories.map(c=>c.id);
+    if (!catIds.length) return;
+    const { data: items } = await sb.from('items').select('id,name,category_id').in('category_id',catIds).ilike('name',`%${q}%`).limit(10);
+    if (!items?.length) { document.getElementById('search-results').innerHTML=`<div class="empty"><div class="empty-icon">🔎</div><p>No items found for "${q}"</p></div>`; return; }
+    const catMap=Object.fromEntries(categories.map(c=>[c.id,c.name]));
+    const itemIds=items.map(i=>i.id);
+    const { data: purchases } = await sb.from('purchases').select('item_id,price,quantity,unit,purchased_at').in('item_id',itemIds).order('purchased_at',{ascending:false});
+    const latestMap={};
+    (purchases||[]).forEach(p=>{if(!latestMap[p.item_id])latestMap[p.item_id]=p;});
+    let html=`<div class="search-results">`;
+    items.forEach(item=>{
+      const lp=latestMap[item.id];
+      const up=lp?calcUnitPrice(lp.price,lp.quantity,lp.unit):null;
+      html+=`<div class="search-result-item" onclick="showItemDetail('${item.id}','${esc(item.name)}')">
+        <div class="sri-name">${item.name}</div>
+        <div class="sri-meta">${catMap[item.category_id]||''}${lp?' · '+fmt(lp.price)+(up?' ('+up+')':'')+'  · '+fmtDate(lp.purchased_at):' · No purchases yet'}</div></div>`;
+    });
+    document.getElementById('search-results').innerHTML=html+'</div>';
+  },300);
+}
+
+async function showItemDetail(itemId, itemName) {
+  const el=document.getElementById('main');
+  el.innerHTML=`<button class="back-btn" onclick="setPage('search')">← Back</button><div class="loading">Loading…</div>`;
+  const { data: purchases } = await sb.from('purchases').select('*').eq('item_id',itemId).order('purchased_at',{ascending:false});
+  if (!purchases?.length) { el.innerHTML=`<button class="back-btn" onclick="setPage('search')">← Back</button><div class="item-detail"><div class="item-detail-header"><div class="item-name-big">${itemName}</div></div><div class="empty"><p>No purchases yet.</p></div></div>`; return; }
+  const latest=purchases[0];
+  const latestUp=calcUnitPrice(latest.price,latest.quantity,latest.unit);
+  let html=`<button class="back-btn" onclick="setPage('search')">← Back</button>
+    <div class="item-detail">
+      <div class="item-detail-header">
+        <div class="item-name-big">${itemName}</div>
+        <div class="item-price-row">
+          <div><div class="price-label">Latest price</div><div class="latest-price">${fmt(latest.price)}</div><div class="price-label">${fmtDate(latest.purchased_at)}</div></div>
+          ${latestUp?`<div class="unit-price-pill">📦 ${latestUp}</div>`:''}
+        </div>
+      </div><div>`;
+  purchases.forEach((p,i)=>{
+    const prev=purchases[i+1]; let badge='';
+    if (prev) { const diff=((p.price-prev.price)/prev.price)*100; if(diff>5)badge=`<span class="h-badge up">↑${Math.round(diff)}%</span>`;else if(diff<-5)badge=`<span class="h-badge down">↓${Math.abs(Math.round(diff))}%</span>`;else badge=`<span class="h-badge same">≈same</span>`; }
+    const up=calcUnitPrice(p.price,p.quantity,p.unit);
+    const meta=[p.quantity?`${p.quantity}${p.unit?' '+p.unit:''}`:null,p.vendor||null,p.notes||null].filter(Boolean).join(' · ');
+    html+=`<div class="history-row"><div class="h-date">${fmtDate(p.purchased_at)}</div>
+      <div class="h-main"><div class="h-price">${fmt(p.price)}</div>${up?`<div class="h-unit-price">${up}</div>`:''} ${meta?`<div class="h-meta">${meta}</div>`:''}</div>${badge}</div>`;
+  });
+  el.innerHTML=html+'</div></div>';
+}
+
+// ── ADD ──────────────────────────────────────────────────
+function renderAdd() {
+  const catOptions=categories.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  const unitOptions=UNITS.map(u=>`<option value="${u}">${u}</option>`).join('');
+  document.getElementById('main').innerHTML=`
+    <div class="form-sheet">
+      <div class="form-header"><div class="card-title" style="margin-bottom:0;">Log a Purchase</div></div>
+      <div class="form-body">
+        <div class="form-group"><label>Item Name</label>
+          <input type="text" id="f-item" placeholder="e.g. Soybean Oil, A4 Paper" list="item-suggestions" autocomplete="off" oninput="fetchItemSuggestions(this.value)" />
+          <datalist id="item-suggestions"></datalist></div>
+        <div class="form-group"><label>Category</label>
+          <select id="f-cat" onchange="handleCatChange(this.value)">
+            <option value="">Select category…</option>${catOptions}<option value="__new__">+ Add new category</option>
+          </select>
+          <div id="new-cat-wrap" style="display:none;" class="new-cat-inline">
+            <input type="text" id="f-new-cat" placeholder="Category name…" />
+            <button class="btn btn-primary btn-sm" onclick="saveInlineCat()">Add</button>
+            <button class="btn btn-outline btn-sm" onclick="cancelInlineCat()">✕</button>
+          </div></div>
+        <div class="form-row">
+          <div class="form-group"><label>Price (৳)</label><input type="number" id="f-price" placeholder="0" min="0" inputmode="decimal" oninput="updateUnitPreview()" /></div>
+          <div class="form-group"><label>Quantity</label><input type="number" id="f-qty" placeholder="1" min="0" step="any" inputmode="decimal" oninput="updateUnitPreview()" /></div>
+        </div>
+        <div class="form-group"><label>Unit</label>
+          <select id="f-unit" onchange="updateUnitPreview()"><option value="">Select unit…</option>${unitOptions}</select>
+          <div id="unit-preview" style="font-size:12px;color:var(--accent);font-weight:600;margin-top:4px;min-height:16px;"></div></div>
+        <div class="form-group"><label>Date</label><input type="date" id="f-date" value="${today()}" /></div>
+        <div class="form-group"><label>Vendor / Shop</label><input type="text" id="f-vendor" placeholder="e.g. Agora, Shwapno" /></div>
+        <div class="form-group"><label>Notes / Specs</label><input type="text" id="f-notes" placeholder="Brand, size, variant…" /></div>
+      </div>
+      <div class="form-footer"><button class="btn btn-primary" onclick="savePurchase()">Save Purchase</button></div>
+    </div>`;
+}
+
+function handleCatChange(val) {
+  const wrap=document.getElementById('new-cat-wrap');
+  if (val==='__new__') { wrap.style.display='flex'; document.getElementById('f-new-cat').focus(); }
+  else wrap.style.display='none';
+}
+async function saveInlineCat() {
+  const name=document.getElementById('f-new-cat').value.trim();
+  if (!name) return;
+  const { data, error } = await sb.from('categories').insert({name,context:currentContext}).select().single();
+  if (error) { showToast('Error adding category'); return; }
+  await loadCategories();
+  showToast(`✓ "${name}" added`);
+  const sel=document.getElementById('f-cat');
+  const opt=document.createElement('option'); opt.value=data.id; opt.textContent=name;
+  sel.insertBefore(opt, sel.querySelector('option[value="__new__"]'));
+  sel.value=data.id;
+  document.getElementById('new-cat-wrap').style.display='none';
+}
+function cancelInlineCat() { document.getElementById('f-cat').value=''; document.getElementById('new-cat-wrap').style.display='none'; }
+function updateUnitPreview() {
+  const price=parseFloat(document.getElementById('f-price')?.value);
+  const qty=parseFloat(document.getElementById('f-qty')?.value);
+  const unit=document.getElementById('f-unit')?.value;
+  const el=document.getElementById('unit-preview');
+  if (!el) return;
+  const up=calcUnitPrice(price,qty,unit);
+  el.textContent=up?'≈ '+up:'';
+}
+async function fetchItemSuggestions(q) {
+  if (!q||q.length<2) return;
+  const catIds=categories.map(c=>c.id);
+  if (!catIds.length) return;
+  const { data } = await sb.from('items').select('name').in('category_id',catIds).ilike('name',`%${q}%`).limit(8);
+  const dl=document.getElementById('item-suggestions');
+  if (dl) dl.innerHTML=(data||[]).map(i=>`<option value="${i.name}">`).join('');
+}
+async function savePurchase() {
+  const itemName=document.getElementById('f-item').value.trim();
+  const catId=document.getElementById('f-cat').value;
+  const price=parseFloat(document.getElementById('f-price').value);
+  const qty=parseFloat(document.getElementById('f-qty').value)||1;
+  const unit=document.getElementById('f-unit').value;
+  const date=document.getElementById('f-date').value;
+  const vendor=document.getElementById('f-vendor').value.trim();
+  const notes=document.getElementById('f-notes').value.trim();
+  if (!itemName) { showToast('Please enter an item name'); return; }
+  if (!catId||catId==='__new__') { showToast('Please select a category'); return; }
+  if (!price||price<=0) { showToast('Please enter a valid price'); return; }
+  let { data: existing } = await sb.from('items').select('id').eq('name',itemName).eq('category_id',catId).limit(1);
+  let itemId;
+  if (existing?.length) { itemId=existing[0].id; }
+  else { const { data: newItem } = await sb.from('items').insert({name:itemName,category_id:catId}).select().single(); itemId=newItem.id; }
+  const { error } = await sb.from('purchases').insert({item_id:itemId,price,quantity:qty,unit:unit||null,purchased_at:date,vendor:vendor||null,notes:notes||null});
+  if (error) { showToast('Error saving. Try again.'); return; }
+  showToast('✓ Purchase saved!'); renderAdd();
+}
+
+// ── SUMMARY ──────────────────────────────────────────────
+async function renderSummary() {
+  const el=document.getElementById('main');
+  el.innerHTML=`<div class="loading">Loading summary…</div>`;
+  const months=getMonths();
+  const catIds=categories.map(c=>c.id);
+  let monthFilter=months.map(m=>`<div class="month-chip ${m.value===selectedMonth?'active':''}" onclick="selectMonth('${m.value}')">${m.label}</div>`).join('');
+  if (!catIds.length) { el.innerHTML=`<div class="month-filter">${monthFilter}</div><div class="empty"><div class="empty-icon">📊</div><p>No data yet.</p></div>`; return; }
+  const start=selectedMonth+'-01';
+  const end=new Date(new Date(start).getFullYear(),new Date(start).getMonth()+1,0).toISOString().split('T')[0];
+  const { data: items } = await sb.from('items').select('id,name,category_id').in('category_id',catIds);
+  if (!items?.length) { el.innerHTML=`<div class="month-filter">${monthFilter}</div><div class="empty"><div class="empty-icon">📊</div><p>No data yet.</p></div>`; return; }
+  const itemIds=items.map(i=>i.id);
+  const catMap=Object.fromEntries(categories.map(c=>[c.id,c.name]));
+  const itemCatMap=Object.fromEntries(items.map(i=>[i.id,i.category_id]));
+  const itemNameMap=Object.fromEntries(items.map(i=>[i.id,i.name]));
+  const { data: purchases } = await sb.from('purchases').select('*').in('item_id',itemIds).gte('purchased_at',start).lte('purchased_at',end);
+  const { data: allPurchases } = await sb.from('purchases').select('item_id,price,purchased_at').in('item_id',itemIds).order('purchased_at',{ascending:false});
+  const catSpend={},itemSpend={};let total=0;
+  (purchases||[]).forEach(p=>{const catId=itemCatMap[p.item_id];const amt=p.price*(p.quantity||1);catSpend[catId]=(catSpend[catId]||0)+amt;itemSpend[p.item_id]=(itemSpend[p.item_id]||0)+amt;total+=amt;});
+  const maxSpend=Math.max(...Object.values(catSpend),1);
+  const itemHistory={};
+  (allPurchases||[]).forEach(p=>{if(!itemHistory[p.item_id])itemHistory[p.item_id]=[];itemHistory[p.item_id].push(p);});
+  let alerts=[];
+  Object.keys(itemHistory).forEach(iid=>{const hist=itemHistory[iid];if(hist.length>=2){const diff=((hist[0].price-hist[1].price)/hist[1].price)*100;if(diff>=10)alerts.push({name:itemNameMap[iid],pct:Math.round(diff),prev:hist[1].price,curr:hist[0].price});}});
+  const topItems=Object.entries(itemSpend).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  let html=`<div class="month-filter">${monthFilter}</div>`;
+  html+=`<div class="summary-grid"><div class="stat-card"><div class="stat-label">Total Spent</div><div class="stat-value">${fmt(total)}</div><div class="stat-sub">${months.find(m=>m.value===selectedMonth)?.label}</div></div><div class="stat-card"><div class="stat-label">Purchases</div><div class="stat-value">${(purchases||[]).length}</div><div class="stat-sub">this month</div></div></div>`;
+  if (Object.keys(catSpend).length) {
+    html+=`<div class="card"><div class="card-title">By Category</div>`;
+    Object.entries(catSpend).sort((a,b)=>b[1]-a[1]).forEach(([catId,amt])=>{html+=`<div class="cat-row"><div class="cat-name">${catMap[catId]||'Unknown'}</div><div class="cat-bar-wrap"><div class="cat-bar" style="width:${Math.round((amt/maxSpend)*100)}%"></div></div><div class="cat-amt">${fmt(amt)}</div></div>`;});
+    html+=`</div>`;
+  }
+  if (topItems.length) {
+    html+=`<div class="card"><div class="card-title">🏆 Top Items This Month</div>`;
+    topItems.forEach(([iid,amt])=>{html+=`<div class="top-item-row"><div><div class="ti-name">${itemNameMap[iid]||'Unknown'}</div><div class="ti-meta">${catMap[itemCatMap[iid]]||''}</div></div><div class="ti-price">${fmt(amt)}</div></div>`;});
+    html+=`</div>`;
+  }
+  if (alerts.length) {
+    html+=`<div class="card"><div class="card-title">⚠️ Price Alerts</div>`;
+    alerts.forEach(a=>{html+=`<div class="alert warn"><div class="alert-icon">📈</div><div class="alert-text"><strong>${a.name}</strong> is up ${a.pct}% — was ${fmt(a.prev)}, now ${fmt(a.curr)}</div></div>`;});
+    html+=`</div>`;
+  }
+  if (!Object.keys(catSpend).length) html+=`<div class="empty"><div class="empty-icon">📭</div><p>No purchases this month.</p></div>`;
+  el.innerHTML=html;
+}
+function selectMonth(m) { selectedMonth=m; renderSummary(); }
+
+// ── UTILITY ──────────────────────────────────────────────
+async function renderUtility() {
+  const el=document.getElementById('main');
+  el.innerHTML=`<div class="loading">Loading…</div>`;
+
+  const typeLabel = currentUtilType==='electricity'?'Electricity':'Gas';
+  const dbType = currentUtilType==='electricity'?'electricity':'gas';
+
+  // fetch all readings for this type, newest first
+  const { data: readings } = await sb.from('utility_readings').select('*').eq('type',dbType).order('reading_date',{ascending:true});
+
+  // fill in gaps: distribute consumed amount evenly for missing days
+  const filled = fillGaps(readings||[]);
+
+  // current month stats
+  const now = new Date();
+  const ym = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const monthReadings = filled.filter(r=>r.reading_date.startsWith(ym));
+  const prevMonthYm = (() => { const d=new Date(now.getFullYear(),now.getMonth()-1,1); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; })();
+  const prevMonthReadings = filled.filter(r=>r.reading_date.startsWith(prevMonthYm));
+
+  // compute daily consumption within a set of readings
+  function consumptionFromReadings(rs) {
+    const sorted=rs.slice().sort((a,b)=>a.reading_date.localeCompare(b.reading_date));
+    const days=[];
+    for(let i=1;i<sorted.length;i++){
+      const consumed=sorted[i-1].balance-sorted[i].balance;
+      if(consumed>0) days.push({date:sorted[i].reading_date,consumed,interpolated:sorted[i].interpolated||false});
+    }
+    return days;
+  }
+
+  const currentDays = consumptionFromReadings(monthReadings);
+  const prevDays = consumptionFromReadings(prevMonthReadings);
+  const avgDaily = currentDays.length ? currentDays.reduce((s,d)=>s+d.consumed,0)/currentDays.length : 0;
+  const prevAvgDaily = prevDays.length ? prevDays.reduce((s,d)=>s+d.consumed,0)/prevDays.length : 0;
+
+  const latestReading = (readings||[]).length ? readings[readings.length-1] : null;
+  const currentBalance = latestReading ? latestReading.balance : null;
+
+  // Cost calculations
+  let costInfo='', rechargeInfo='', alertHtml='';
+  const totalDays = daysInMonth(ym);
+  const daysPassed = now.getDate();
+  const daysLeft = totalDays - daysPassed;
+
+  if (currentUtilType==='electricity') {
+    // cost = balance consumed + demand charge
+    const totalConsumedTaka = currentDays.reduce((s,d)=>s+d.consumed,0);
+    const projectedTotalTaka = avgDaily * totalDays;
+    const estimatedBill = projectedTotalTaka + ELEC_DEMAND_CHARGE;
+    const projectedNeeded = (avgDaily * daysLeft) + ELEC_DEMAND_CHARGE;
+    const recommendedRecharge = projectedNeeded * 1.15; // 15% buffer
+
+    costInfo=`
+      <div class="util-grid">
+        <div class="util-stat"><div class="util-stat-label">Avg/Day</div><div class="util-stat-value">${fmt(Math.round(avgDaily))}</div><div class="util-stat-sub">consumed</div></div>
+        <div class="util-stat"><div class="util-stat-label">Demand Charge</div><div class="util-stat-value">${fmt(ELEC_DEMAND_CHARGE)}</div><div class="util-stat-sub">fixed this month</div></div>
+        <div class="util-stat"><div class="util-stat-label">Est. Month Total</div><div class="util-stat-value">${fmt(Math.round(estimatedBill))}</div><div class="util-stat-sub">usage + demand</div></div>
+        <div class="util-stat"><div class="util-stat-label">Days Left</div><div class="util-stat-value">${daysLeft}</div><div class="util-stat-sub">in ${now.toLocaleDateString('en-BD',{month:'long'})}</div></div>
+      </div>`;
+
+    // recharge recommendation
+    if (currentBalance !== null) {
+      const daysUntilAlert = avgDaily>0 ? Math.floor((currentBalance - ELEC_ALERT_THRESHOLD) / avgDaily) : null;
+      const rechargeDate = daysUntilAlert !== null ? new Date(Date.now() + daysUntilAlert*86400000).toLocaleDateString('en-BD',{day:'numeric',month:'short'}) : '—';
+
+      if (currentBalance < ELEC_ALERT_THRESHOLD) {
+        alertHtml+=`<div class="alert danger"><div class="alert-icon">🚨</div><div class="alert-text"><strong>Recharge now!</strong> Balance ৳${currentBalance} is below the ৳${ELEC_ALERT_THRESHOLD} threshold. Recommended top-up: <strong>${fmt(Math.round(recommendedRecharge))}</strong> to cover remaining ${daysLeft} days + 15% buffer.</div></div>`;
+      } else {
+        alertHtml+=`<div class="alert info"><div class="alert-icon">📅</div><div class="alert-text">Balance will hit ৳${ELEC_ALERT_THRESHOLD} in <strong>~${daysUntilAlert} days</strong> (around <strong>${rechargeDate}</strong>). Recommended recharge: <strong>${fmt(Math.round(recommendedRecharge))}</strong>.</div></div>`;
+      }
+    }
+
+    // month over month
+    if (prevAvgDaily>0) {
+      const diff=((avgDaily-prevAvgDaily)/prevAvgDaily)*100;
+      const sign=diff>0?'↑':'↓';
+      const cls=diff>0?'danger':'info';
+      const msg=diff>0?`Using ${Math.abs(Math.round(diff))}% more per day than last month.`:`Using ${Math.abs(Math.round(diff))}% less per day than last month.`;
+      alertHtml+=`<div class="alert ${cls}"><div class="alert-icon">${diff>0?'📈':'📉'}</div><div class="alert-text">${sign} <strong>${msg}</strong> Last month avg: ${fmt(Math.round(prevAvgDaily))}/day.</div></div>`;
+    }
+
+  } else {
+    // GAS
+    const totalConsumedM3 = currentDays.reduce((s,d)=>s+d.consumed,0);
+    const projectedM3 = avgDaily * totalDays;
+    const estimatedBill = (projectedM3 * GAS_RATE) + GAS_METER_CHARGE;
+    const neededM3 = avgDaily * daysLeft;
+    const recommendedRechargeM3 = neededM3 * 1.15;
+    const recommendedRechargeTaka = (recommendedRechargeM3 * GAS_RATE) + GAS_METER_CHARGE;
+
+    costInfo=`
+      <div class="util-grid">
+        <div class="util-stat"><div class="util-stat-label">Avg/Day</div><div class="util-stat-value">${avgDaily.toFixed(2)}</div><div class="util-stat-sub">m³ consumed</div></div>
+        <div class="util-stat"><div class="util-stat-label">Meter Charge</div><div class="util-stat-value">${fmt(GAS_METER_CHARGE)}</div><div class="util-stat-sub">fixed this month</div></div>
+        <div class="util-stat"><div class="util-stat-label">Est. Month Bill</div><div class="util-stat-value">${fmt(Math.round(estimatedBill))}</div><div class="util-stat-sub">usage + meter</div></div>
+        <div class="util-stat"><div class="util-stat-label">Est. Usage</div><div class="util-stat-value">${projectedM3.toFixed(1)}</div><div class="util-stat-sub">m³ this month</div></div>
+      </div>`;
+
+    if (currentBalance !== null) {
+      const daysUntilEmpty = avgDaily>0 ? Math.floor(currentBalance/avgDaily) : null;
+      const daysUntilAlert = avgDaily>0 ? Math.floor((currentBalance - (avgDaily*3))/avgDaily) : null; // alert when 3 days left
+      const rechargeDate = daysUntilAlert!==null ? new Date(Date.now()+daysUntilAlert*86400000).toLocaleDateString('en-BD',{day:'numeric',month:'short'}) : '—';
+
+      if (currentBalance < avgDaily*3) {
+        alertHtml+=`<div class="alert danger"><div class="alert-icon">🚨</div><div class="alert-text"><strong>Recharge now!</strong> Less than 3 days of gas remaining. Top up <strong>${recommendedRechargeM3.toFixed(1)} m³</strong> (~${fmt(Math.round(recommendedRechargeTaka))}) to cover ${daysLeft} days + 15% buffer.</div></div>`;
+      } else {
+        alertHtml+=`<div class="alert info"><div class="alert-icon">📅</div><div class="alert-text">Gas runs out in ~<strong>${daysUntilEmpty} days</strong>. Recharge by <strong>${rechargeDate}</strong>: top up <strong>${recommendedRechargeM3.toFixed(1)} m³</strong> (~${fmt(Math.round(recommendedRechargeTaka))}).</div></div>`;
+      }
+    }
+
+    if (prevAvgDaily>0) {
+      const diff=((avgDaily-prevAvgDaily)/prevAvgDaily)*100;
+      const sign=diff>0?'↑':'↓'; const cls=diff>0?'danger':'info';
+      alertHtml+=`<div class="alert ${cls}"><div class="alert-icon">${diff>0?'📈':'📉'}</div><div class="alert-text">${sign} <strong>Using ${Math.abs(Math.round(diff))}% ${diff>0?'more':'less'} per day than last month.</strong> Last month avg: ${prevAvgDaily.toFixed(2)} m³/day.</div></div>`;
+    }
+  }
+
+  // recent readings table (last 14 days)
+  const recentRaw=(readings||[]).slice(-14).reverse();
+  const recentFilled=filled.slice(-14).reverse();
+  let readingsHtml='';
+  const unit=currentUtilType==='electricity'?'৳':'m³';
+  recentFilled.forEach((r,i)=>{
+    const next=recentFilled[i+1];
+    const consumed=next?Math.max(0,r.balance-next.balance):null;
+    const highConsume=consumed&&avgDaily>0&&consumed>avgDaily*1.5;
+    readingsHtml+=`<div class="reading-row">
+      <div class="rr-date">${fmtDateShort(r.reading_date)}${r.interpolated?`<br><span class="rr-interp">~est.</span>`:''}</div>
+      <div class="rr-balance">${r.balance.toFixed(currentUtilType==='gas'?2:0)} ${unit}</div>
+      <div class="rr-consumed ${highConsume?'high':''}">${consumed!==null?'−'+(currentUtilType==='gas'?consumed.toFixed(2):Math.round(consumed))+' '+unit:'—'}</div>
+    </div>`;
+  });
+
+  const typeColor=currentUtilType==='electricity'?'elec':'gas';
+  const heroIcon=currentUtilType==='electricity'?'⚡':'🔥';
+
+  el.innerHTML=`
+    <div class="util-toggle">
+      <button class="util-btn elec ${currentUtilType==='electricity'?'active':''}" onclick="switchUtilType('electricity')">⚡ Electricity</button>
+      <button class="util-btn gas ${currentUtilType==='gas'?'active':''}" onclick="switchUtilType('gas')">🔥 Gas</button>
+    </div>
+
+    ${currentBalance!==null?`
+    <div class="util-hero ${typeColor}">
+      <div class="util-hero-label">Current Balance</div>
+      <div class="util-hero-value ${typeColor}">${currentBalance.toFixed(currentUtilType==='gas'?2:0)} ${unit}</div>
+      <div class="util-hero-sub">as of ${latestReading?fmtDate(latestReading.reading_date):'—'}</div>
+    </div>`:`<div class="alert info"><div class="alert-icon">💡</div><div class="alert-text">No readings yet. Log your first ${typeLabel} reading below.</div></div>`}
+
+    ${alertHtml}
+    ${costInfo}
+
+    <div class="form-sheet" style="margin-bottom:12px;">
+      <div class="form-header"><div class="card-title" style="margin-bottom:0;">${heroIcon} Log Today's Reading</div></div>
+      <div class="form-body">
+        <div class="form-row">
+          <div class="form-group"><label>Date</label><input type="date" id="u-date" value="${today()}" /></div>
+          <div class="form-group"><label>Balance (${unit})</label><input type="number" id="u-balance" placeholder="0" min="0" step="${currentUtilType==='gas'?'0.01':'1'}" inputmode="decimal" /></div>
+        </div>
+        <div class="form-group"><label>Notes (optional)</label><input type="text" id="u-notes" placeholder="e.g. after recharge" /></div>
+      </div>
+      <div class="form-footer"><button class="btn btn-primary" onclick="saveReading()">Save Reading</button></div>
+    </div>
+
+    ${recentRaw.length?`
+    <div class="card">
+      <div class="card-title">Recent Readings</div>
+      <div style="margin:-4px -4px;">
+        <div class="reading-row" style="padding:8px 16px;"><div class="rr-date" style="font-weight:600;font-size:11px;text-transform:uppercase;">Date</div><div class="rr-balance" style="font-weight:600;font-size:11px;text-transform:uppercase;">Balance</div><div class="rr-consumed" style="font-weight:600;font-size:11px;text-transform:uppercase;">Used</div></div>
+        ${readingsHtml}
+      </div>
+    </div>`:''}
+  `;
+}
+
+function fillGaps(readings) {
+  // readings sorted ascending by date
+  if (!readings.length) return [];
+  const result=[];
+  for (let i=0;i<readings.length;i++) {
+    result.push({...readings[i], interpolated:false});
+    if (i<readings.length-1) {
+      const curr=new Date(readings[i].reading_date);
+      const next=new Date(readings[i+1].reading_date);
+      const days=Math.round((next-curr)/86400000);
+      if (days>1) {
+        const balanceDrop=readings[i].balance-readings[i+1].balance;
+        const dailyDrop=balanceDrop/days;
+        for(let d=1;d<days;d++){
+          const dt=new Date(curr.getTime()+d*86400000);
+          const dateStr=dt.toISOString().split('T')[0];
+          const bal=Math.max(0,readings[i].balance-(dailyDrop*d));
+          result.push({id:'interp-'+dateStr,type:readings[i].type,reading_date:dateStr,balance:parseFloat(bal.toFixed(2)),interpolated:true});
+        }
+      }
+    }
+  }
+  return result.sort((a,b)=>a.reading_date.localeCompare(b.reading_date));
+}
+
+function switchUtilType(t) { currentUtilType=t; renderUtility(); }
+
+async function saveReading() {
+  const date=document.getElementById('u-date').value;
+  const balance=parseFloat(document.getElementById('u-balance').value);
+  const notes=document.getElementById('u-notes').value.trim();
+  if (!date) { showToast('Please select a date'); return; }
+  if (isNaN(balance)||balance<0) { showToast('Please enter a valid balance'); return; }
+  const { error } = await sb.from('utility_readings').upsert({type:currentUtilType==='electricity'?'electricity':'gas',reading_date:date,balance,notes:notes||null},{onConflict:'type,reading_date'});
+  if (error) { showToast('Error saving reading'); return; }
+  showToast('✓ Reading saved!'); renderUtility();
+}
+
+// ── MANAGE ───────────────────────────────────────────────
+function renderManage() {
+  let catHtml=categories.length?categories.map(c=>`<span class="cat-tag">${c.name} <button class="cat-tag-del" onclick="deleteCategory('${c.id}','${esc(c.name)}')">×</button></span>`).join(''):`<span style="font-size:13px;color:var(--text-muted);">No categories yet.</span>`;
+  document.getElementById('main').innerHTML=`
+    <div class="card">
+      <div class="card-title">Categories — ${currentContext}</div>
+      <div style="margin-bottom:14px;">${catHtml}</div>
+      <div style="display:flex;gap:8px;"><input type="text" id="new-cat" placeholder="New category name…" style="flex:1;" /><button class="btn btn-primary btn-sm" onclick="addCategory()">Add</button></div>
+    </div>
+    <div class="card"><div style="font-size:13px;color:var(--text-muted);">Switch between <strong>Home</strong> and <strong>Office</strong> tabs above to manage each context's categories.</div></div>`;
+}
+async function addCategory() {
+  const name=document.getElementById('new-cat').value.trim();
+  if (!name) return;
+  const { error } = await sb.from('categories').insert({name,context:currentContext});
+  if (error) { showToast('Error adding category'); return; }
+  showToast(`✓ "${name}" added`); await loadCategories(); renderManage();
+}
+async function deleteCategory(id,name) {
+  if (!confirm(`Delete category "${name}"?`)) return;
+  await sb.from('categories').delete().eq('id',id);
+  showToast(`Deleted "${name}"`); await loadCategories(); renderManage();
+}
+
+async function init() {
+  document.getElementById('main').innerHTML=`<div class="loading">Loading…</div>`;
+  await loadCategories(); render();
+}
+init();
+</script>
+</body>
+</html>
