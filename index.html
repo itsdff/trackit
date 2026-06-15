@@ -276,7 +276,7 @@ function calcUnitPrice(price,qty,unit){
   const result={perUnit:fmt(Math.round(perUnit*100)/100)+' / '+unit,standardRate:null,standardUnit:null};
   if(unit==='g'){result.standardRate=fmt(Math.round(perUnit*1000));result.standardUnit='kg';}
   else if(unit==='ml'){result.standardRate=fmt(Math.round(perUnit*1000));result.standardUnit='litre';}
-  else if(unit==='kg'||unit==='litre'){result.standardRate=fmt(Math.round(perUnit));result.standardUnit=unit;}
+  else if(unit==='kg'||unit==='litre'||unit==='pcs'||unit==='pack'||unit==='box'||unit==='bottle'||unit==='bag'||unit==='roll'||unit==='sheet'||unit==='dozen'||unit==='metre'){result.standardRate=fmt(Math.round(perUnit*100)/100);result.standardUnit=unit==='pcs'?'pc':unit;}
   return result;
 }
 function getMonths(){
