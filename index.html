@@ -181,6 +181,33 @@ input:focus,select:focus{border-color:var(--accent);}
 .toast.show{opacity:1;}
 body.keyboard-open .bottom-nav{display:none;}
 body.keyboard-open main{padding-bottom:16px;}
+
+/* EXPENSE TAB */
+--expense:#8B5CF6;--expense-light:#F5F3FF;
+.xp-sub-nav{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;margin-bottom:14px;scrollbar-width:none;}
+.xp-sub-nav::-webkit-scrollbar{display:none;}
+.xp-sub-btn{padding:7px 16px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface);color:var(--text-muted);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all 0.15s;flex-shrink:0;}
+.xp-sub-btn.active{background:#8B5CF6;border-color:#8B5CF6;color:#fff;}
+.xp-amount-hero{text-align:center;padding:20px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;}
+.xp-amount-month{font-size:12px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;}
+.xp-amount-val{font-family:'Sora',sans-serif;font-size:36px;font-weight:700;color:#8B5CF6;margin:6px 0;}
+.xp-entry{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.xp-entry:last-child{border-bottom:none;}
+.xp-entry-left{flex:1;}
+.xp-entry-cat{font-size:13px;font-weight:600;}
+.xp-entry-meta{font-size:12px;color:var(--text-muted);margin-top:2px;}
+.xp-entry-right{text-align:right;flex-shrink:0;}
+.xp-entry-amount{font-weight:700;font-size:15px;color:#8B5CF6;}
+.xp-entry-medium{font-size:11px;color:var(--text-muted);margin-top:2px;}
+.xp-medium-badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;background:var(--surface2);color:var(--text-muted);}
+.chart-wrap{width:100%;height:200px;display:flex;align-items:center;justify-content:center;}
+.xp-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.xp-bar-label{font-size:12px;font-weight:500;width:100px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.xp-bar-outer{flex:1;height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;}
+.xp-bar-inner{height:100%;border-radius:4px;background:#8B5CF6;}
+.xp-bar-amt{font-size:12px;font-weight:600;color:var(--text-muted);width:65px;text-align:right;flex-shrink:0;}
+[data-theme="dark"] .xp-sub-btn.active{background:#7C3AED;border-color:#7C3AED;}
+
 </style>
 </head>
 <body>
@@ -202,6 +229,7 @@ body.keyboard-open main{padding-bottom:16px;}
   <button class="bnav-item" id="bnav-add" onclick="setPage('add')"><span class="bnav-icon">➕</span>Add</button>
   <button class="bnav-item" id="bnav-summary" onclick="setPage('summary')"><span class="bnav-icon">📊</span>Summary</button>
   <button class="bnav-item" id="bnav-utility" onclick="setPage('utility')"><span class="bnav-icon">⚡</span>Utilities</button>
+  <button class="bnav-item" id="bnav-expenses" onclick="setPage('expenses')"><span class="bnav-icon">💸</span>Expenses</button>
   <button class="bnav-item" id="bnav-manage" onclick="setPage('manage')"><span class="bnav-icon">⚙️</span>Manage</button>
 </div>
 <div id="modal-container"></div>
@@ -293,6 +321,7 @@ function render(){
   else if(currentPage==='add')renderAdd();
   else if(currentPage==='summary')renderSummary();
   else if(currentPage==='utility')renderUtility();
+  else if(currentPage==='expenses')renderExpenses();
   else if(currentPage==='manage')renderManage();
 }
 
@@ -825,6 +854,271 @@ async function deleteCategory(id,name){
   if(!confirm(`Delete category "${name}"?`))return;
   await sb.from('categories').delete().eq('id',id);
   showToast(`Deleted "${name}"`);await loadCategories();renderManage();
+}
+
+
+// ── XPENSE (separate Supabase) ───────────────────────────
+const XP_URL='https://knjibkbggkrgusuzorhu.supabase.co';
+const XP_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtuamlia2JnZ2tyZ3VzdXpvcmh1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1MjQ1OTgsImV4cCI6MjA5NzEwMDU5OH0.8QNYDVtgrar_gsmcDw4si6p237qvJ9ML9SpDA5egO00';
+const xp=supabase.createClient(XP_URL,XP_KEY);
+
+let xpPage='add'; // add | list | analytics | settings
+let xpCategories=[];let xpMediums=[];
+let xpSelectedMonth=new Date().toISOString().slice(0,7);
+
+async function loadXpData(){
+  const[{data:cats},{data:meds}]=await Promise.all([
+    xp.from('categories').select('*').order('name'),
+    xp.from('mediums').select('*').order('name')
+  ]);
+  xpCategories=cats||[];xpMediums=meds||[];
+}
+
+function renderExpenses(){
+  document.getElementById('main').innerHTML=`
+    <div class="xp-sub-nav">
+      <button class="xp-sub-btn ${xpPage==='add'?'active':''}" onclick="setXpPage('add')">➕ Add</button>
+      <button class="xp-sub-btn ${xpPage==='list'?'active':''}" onclick="setXpPage('list')">📋 List</button>
+      <button class="xp-sub-btn ${xpPage==='analytics'?'active':''}" onclick="setXpPage('analytics')">📊 Analytics</button>
+      <button class="xp-sub-btn ${xpPage==='settings'?'active':''}" onclick="setXpPage('settings')">⚙️ Settings</button>
+    </div>
+    <div id="xp-content"><div class="loading">Loading…</div></div>`;
+  renderXpContent();
+}
+function setXpPage(p){xpPage=p;renderExpenses();}
+
+async function renderXpContent(){
+  await loadXpData();
+  const el=document.getElementById('xp-content');
+  if(xpPage==='add') renderXpAdd(el);
+  else if(xpPage==='list') await renderXpList(el);
+  else if(xpPage==='analytics') await renderXpAnalytics(el);
+  else if(xpPage==='settings') renderXpSettings(el);
+}
+
+// ADD EXPENSE
+function renderXpAdd(el){
+  const catOpts=xpCategories.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  const medOpts=xpMediums.map(m=>`<option value="${m.id}">${m.name}</option>`).join('');
+  el.innerHTML=`
+    <div class="form-sheet">
+      <div class="form-header"><div class="card-title" style="margin-bottom:0;">New Expense</div></div>
+      <div class="form-body">
+        <div class="form-group"><label>Amount (৳)</label>
+          <input type="number" id="xp-amount" placeholder="0" min="0" inputmode="decimal" /></div>
+        <div class="form-row">
+          <div class="form-group"><label>Category</label>
+            <select id="xp-cat"><option value="">Select…</option>${catOpts}</select></div>
+          <div class="form-group"><label>Medium</label>
+            <select id="xp-med"><option value="">Select…</option>${medOpts}</select></div>
+        </div>
+        <div class="form-group"><label>Note (optional)</label>
+          <input type="text" id="xp-note" placeholder="Brief description…" /></div>
+      </div>
+      <div class="form-footer"><button class="btn btn-primary" style="background:#8B5CF6;" onclick="saveExpense()">+ Add Expense</button></div>
+    </div>
+    <div class="card" style="margin-top:4px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div><div style="font-weight:600;font-size:14px;">Balance reconciliation</div><div style="font-size:12px;color:var(--text-muted);margin-top:2px;">Tap after verifying your wealth tracker app</div></div>
+        <button class="btn btn-outline btn-sm" onclick="markBalanceChecked()">Balance checked</button>
+      </div>
+    </div>`;
+}
+
+async function saveExpense(){
+  const amount=parseFloat(document.getElementById('xp-amount').value);
+  const catId=document.getElementById('xp-cat').value;
+  const medId=document.getElementById('xp-med').value;
+  const note=document.getElementById('xp-note').value.trim();
+  if(!amount||amount<=0){showToast('Please enter an amount');return;}
+  if(!catId){showToast('Please select a category');return;}
+  if(!medId){showToast('Please select a medium');return;}
+  const{error}=await xp.from('expenses').insert({
+    amount,category_id:catId,medium_id:medId,note:note||null,created_at:new Date().toISOString()
+  });
+  if(error){showToast('Error saving expense: '+error.message);return;}
+  showToast('✓ Expense saved!');
+  document.getElementById('xp-amount').value='';
+  document.getElementById('xp-note').value='';
+}
+
+async function markBalanceChecked(){
+  // log a reconciliation event with today's date
+  await xp.from('expenses').insert({amount:0,category_id:null,medium_id:null,note:'__balance_checked__',date:today()}).select();
+  showToast('✓ Balance reconciliation logged');
+}
+
+// LIST
+async function renderXpList(el){
+  el.innerHTML=`<div class="loading">Loading…</div>`;
+  const months=getMonths();
+  let monthFilter=months.map(m=>`<div class="month-chip ${m.value===xpSelectedMonth?'active':''}" onclick="xpSelectMonth('${m.value}')">${m.label}</div>`).join('');
+  const start=xpSelectedMonth+'-01';
+  const end=new Date(new Date(start).getFullYear(),new Date(start).getMonth()+1,0).toISOString().split('T')[0];
+  const{data:expenses}=await xp.from('expenses').select('*').gte('created_at',start).lte('created_at',end).neq('note','__balance_checked__').order('created_at',{ascending:false}).order('created_at',{ascending:false});
+  const catMap=Object.fromEntries(xpCategories.map(c=>[c.id,c.name]));
+  const medMap=Object.fromEntries(xpMediums.map(m=>[m.id,m.name]));
+  const total=(expenses||[]).reduce((s,e)=>s+e.amount,0);
+  let html=`<div class="month-filter">${monthFilter}</div>
+    <div class="xp-amount-hero">
+      <div class="xp-amount-month">${months.find(m=>m.value===xpSelectedMonth)?.label||''}</div>
+      <div class="xp-amount-val">${fmt(total)}</div>
+      <div style="font-size:12px;color:var(--text-muted);">${(expenses||[]).length} expenses</div>
+    </div>`;
+  if(!(expenses||[]).length){html+=`<div class="empty"><div class="empty-icon">💸</div><p>No expenses this month.</p></div>`;el.innerHTML=html;return;}
+  html+=`<div class="card" style="padding:0;overflow:hidden;">`;
+  (expenses||[]).forEach(e=>{
+    html+=`<div class="xp-entry">
+      <div class="xp-entry-left">
+        <div class="xp-entry-cat">${catMap[e.category_id]||'—'}</div>
+        <div class="xp-entry-meta">${fmtDate((e.date||e.created_at||'').slice(0,10))}${e.note?` · ${e.note}`:''}</div>
+      </div>
+      <div class="xp-entry-right">
+        <div class="xp-entry-amount">${fmt(e.amount)}</div>
+        <div class="xp-entry-medium">${medMap[e.medium_id]||'—'}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <button class="edit-btn" onclick="openEditExpense('${e.id}')">✏️</button>
+        <button class="delete-btn" onclick="deleteExpense('${e.id}')">🗑</button>
+      </div>
+    </div>`;
+  });
+  html+=`</div>`;
+  el.innerHTML=html;
+}
+
+function xpSelectMonth(m){xpSelectedMonth=m;renderXpContent();}
+
+async function openEditExpense(id){
+  const{data:e}=await xp.from('expenses').select('*').eq('id',id).single();
+  if(!e)return;
+  const catOpts=xpCategories.map(c=>`<option value="${c.id}" ${c.id===e.category_id?'selected':''}>${c.name}</option>`).join('');
+  const medOpts=xpMediums.map(m=>`<option value="${m.id}" ${m.id===e.medium_id?'selected':''}>${m.name}</option>`).join('');
+  showModal(`<div class="modal">
+    <div class="modal-header"><div class="modal-title">Edit Expense</div><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Amount (৳)</label><input type="number" id="ee-amount" value="${e.amount}" inputmode="decimal" /></div>
+      <div class="form-row">
+        <div class="form-group"><label>Category</label><select id="ee-cat"><option value="">—</option>${catOpts}</select></div>
+        <div class="form-group"><label>Medium</label><select id="ee-med"><option value="">—</option>${medOpts}</select></div>
+      </div>
+      <div class="form-group"><label>Note</label><input type="text" id="ee-note" value="${e.note||''}" /></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline btn-sm" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary btn-sm" style="flex:1;background:#8B5CF6;" onclick="saveEditExpense('${id}')">Save</button>
+    </div>
+  </div>`);
+}
+
+async function saveEditExpense(id){
+  const amount=parseFloat(document.getElementById('ee-amount').value);
+  const catId=document.getElementById('ee-cat').value;
+  const medId=document.getElementById('ee-med').value;
+  const note=document.getElementById('ee-note').value.trim();
+  if(!amount||amount<=0){showToast('Enter a valid amount');return;}
+  const{error}=await xp.from('expenses').update({amount,category_id:catId||null,medium_id:medId||null,note:note||null}).eq('id',id);
+  if(error){showToast('Error saving');return;}
+  showToast('✓ Updated!');closeModal();await renderXpContent();
+}
+
+async function deleteExpense(id){
+  if(!confirm('Delete this expense?'))return;
+  await xp.from('expenses').delete().eq('id',id);
+  showToast('Deleted');await renderXpContent();
+}
+
+// ANALYTICS
+async function renderXpAnalytics(el){
+  el.innerHTML=`<div class="loading">Loading…</div>`;
+  const months=getMonths();
+  let monthFilter=months.map(m=>`<div class="month-chip ${m.value===xpSelectedMonth?'active':''}" onclick="xpSelectMonth('${m.value}')">${m.label}</div>`).join('');
+  const start=xpSelectedMonth+'-01';
+  const end=new Date(new Date(start).getFullYear(),new Date(start).getMonth()+1,0).toISOString().split('T')[0];
+  const{data:expenses}=await xp.from('expenses').select('*').gte('created_at',start).lte('created_at',end).neq('note','__balance_checked__');
+  const catMap=Object.fromEntries(xpCategories.map(c=>[c.id,c.name]));
+  const medMap=Object.fromEntries(xpMediums.map(m=>[m.id,m.name]));
+  const total=(expenses||[]).reduce((s,e)=>s+e.amount,0);
+
+  // by category
+  const byCat={};
+  (expenses||[]).forEach(e=>{const k=catMap[e.category_id]||'Other';byCat[k]=(byCat[k]||0)+e.amount;});
+  // by medium
+  const byMed={};
+  (expenses||[]).forEach(e=>{const k=medMap[e.medium_id]||'Other';byMed[k]=(byMed[k]||0)+e.amount;});
+
+  const maxCat=Math.max(...Object.values(byCat),1);
+  const maxMed=Math.max(...Object.values(byMed),1);
+
+  let catBars=Object.entries(byCat).sort((a,b)=>b[1]-a[1]).map(([name,amt])=>`
+    <div class="xp-bar-row">
+      <div class="xp-bar-label">${name}</div>
+      <div class="xp-bar-outer"><div class="xp-bar-inner" style="width:${Math.round((amt/maxCat)*100)}%"></div></div>
+      <div class="xp-bar-amt">${fmt(amt)}</div>
+    </div>`).join('');
+
+  let medBars=Object.entries(byMed).sort((a,b)=>b[1]-a[1]).map(([name,amt])=>`
+    <div class="xp-bar-row">
+      <div class="xp-bar-label">${name}</div>
+      <div class="xp-bar-outer"><div class="xp-bar-inner" style="width:${Math.round((amt/maxMed)*100)}%;background:#10B981;"></div></div>
+      <div class="xp-bar-amt">${fmt(amt)}</div>
+    </div>`).join('');
+
+  el.innerHTML=`
+    <div class="month-filter">${monthFilter}</div>
+    <div class="xp-amount-hero">
+      <div class="xp-amount-month">${months.find(m=>m.value===xpSelectedMonth)?.label||''}</div>
+      <div class="xp-amount-val">${fmt(total)}</div>
+      <div style="font-size:12px;color:var(--text-muted);">${(expenses||[]).length} expenses</div>
+    </div>
+    <div class="card">
+      <div class="card-title">By Category</div>
+      ${catBars||'<div style="font-size:13px;color:var(--text-muted);">No data this month</div>'}
+    </div>
+    <div class="card">
+      <div class="card-title">By Payment Medium</div>
+      ${medBars||'<div style="font-size:13px;color:var(--text-muted);">No data this month</div>'}
+    </div>`;
+}
+
+// SETTINGS
+function renderXpSettings(el){
+  const catHtml=xpCategories.length?xpCategories.map(c=>`<span class="cat-tag">${c.name} <button class="cat-tag-del" onclick="deleteXpCategory('${c.id}','${esc(c.name)}')">×</button></span>`).join(''):`<span style="font-size:13px;color:var(--text-muted);">No categories yet.</span>`;
+  const medHtml=xpMediums.length?xpMediums.map(m=>`<span class="cat-tag">${m.name} <button class="cat-tag-del" onclick="deleteXpMedium('${m.id}','${esc(m.name)}')">×</button></span>`).join(''):`<span style="font-size:13px;color:var(--text-muted);">No mediums yet.</span>`;
+  el.innerHTML=`
+    <div class="card">
+      <div class="card-title">Expense Categories</div>
+      <div style="margin-bottom:14px;">${catHtml}</div>
+      <div style="display:flex;gap:8px;"><input type="text" id="xp-new-cat" placeholder="New category…" style="flex:1;" /><button class="btn btn-primary btn-sm" style="background:#8B5CF6;" onclick="addXpCategory()">Add</button></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Payment Mediums</div>
+      <div style="margin-bottom:14px;">${medHtml}</div>
+      <div style="display:flex;gap:8px;"><input type="text" id="xp-new-med" placeholder="New medium…" style="flex:1;" /><button class="btn btn-primary btn-sm" style="background:#10B981;" onclick="addXpMedium()">Add</button></div>
+    </div>`;
+}
+
+async function addXpCategory(){
+  const name=document.getElementById('xp-new-cat').value.trim();if(!name)return;
+  const{error}=await xp.from('categories').insert({name});
+  if(error){showToast('Error: '+error.message);return;}
+  showToast(`✓ "${name}" added`);await loadXpData();renderXpSettings(document.getElementById('xp-content'));
+}
+async function deleteXpCategory(id,name){
+  if(!confirm(`Delete category "${name}"?`))return;
+  await xp.from('categories').delete().eq('id',id);
+  showToast(`Deleted "${name}"`);await loadXpData();renderXpSettings(document.getElementById('xp-content'));
+}
+async function addXpMedium(){
+  const name=document.getElementById('xp-new-med').value.trim();if(!name)return;
+  const{error}=await xp.from('mediums').insert({name});
+  if(error){showToast('Error: '+error.message);return;}
+  showToast(`✓ "${name}" added`);await loadXpData();renderXpSettings(document.getElementById('xp-content'));
+}
+async function deleteXpMedium(id,name){
+  if(!confirm(`Delete medium "${name}"?`))return;
+  await xp.from('mediums').delete().eq('id',id);
+  showToast(`Deleted "${name}"`);await loadXpData();renderXpSettings(document.getElementById('xp-content'));
 }
 
 async function init(){
