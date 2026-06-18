@@ -205,8 +205,7 @@ body.keyboard-open main{padding-bottom:16px;}
 </nav>
 <main id="main"></main>
 <div class="bottom-nav">
-  <button class="bnav-item active" id="bnav-search" onclick="setPage('search')"><span class="bnav-icon">🔍</span>Search</button>
-  <button class="bnav-item" id="bnav-add" onclick="setPage('add')"><span class="bnav-icon">➕</span>Add</button>
+  <button class="bnav-item active" id="bnav-add" onclick="setPage('add')"><span class="bnav-icon">➕</span>Add</button>
   <button class="bnav-item" id="bnav-tracker" onclick="setPage('tracker')"><span class="bnav-icon">📦</span>Items</button>
   <button class="bnav-item exp-tab" id="bnav-expenses" onclick="setPage('expenses')"><span class="bnav-icon">💸</span>Expenses</button>
   <button class="bnav-item" id="bnav-utility" onclick="setPage('utility')"><span class="bnav-icon">⚡</span>Utils</button>
@@ -221,7 +220,7 @@ const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const UNITS=['pcs','kg','g','litre','ml','pack','box','dozen','roll','bottle','bag','sheet','metre'];
 const ELEC_DEMAND_CHARGE=6*42,ELEC_ALERT_THRESHOLD=80,GAS_METER_CHARGE=200,GAS_RATE=18;
 
-let currentContext='Home',currentPage='search',currentUtilType='electricity';
+let currentContext='Home',currentPage='tracker',currentUtilType='electricity';
 let categories=[],expMediums=[],searchTimeout=null;
 let selectedMonth=new Date().toISOString().slice(0,7);
 let selectedCatFilter='all',expSubPage='summary';
@@ -229,7 +228,7 @@ let selectedCatFilter='all',expSubPage='summary';
 // BACK BUTTON — deferred so functions are defined
 window.addEventListener('popstate',()=>{
   if(!appReady)return;
-  if(currentPage!=='search'){setPage('search');history.pushState(null,'',location.href);}
+  if(currentPage!=='tracker'){setPage('tracker');history.pushState(null,'',location.href);}
   else history.pushState(null,'',location.href);
 });
 
@@ -262,8 +261,7 @@ function esc(s){return s.replace(/'/g,"\\'").replace(/"/g,'&quot;');}
 function today(){return new Date().toISOString().split('T')[0];}
 function daysInMonth(ym){const[y,m]=ym.split('-').map(Number);return new Date(y,m,0).getDate();}
 function render(){
-  if(currentPage==='search')renderSearch();
-  else if(currentPage==='add')renderAdd();
+  if(currentPage==='add')renderAdd();
   else if(currentPage==='tracker')renderTracker();
   else if(currentPage==='expenses')renderExpenses();
   else if(currentPage==='utility')renderUtility();
@@ -276,65 +274,6 @@ function closeModal(){document.getElementById('modal-container').innerHTML='';}
 function closeModalOnOverlay(e){if(e.target.classList.contains('modal-overlay'))closeModal();}
 
 // ── SEARCH (purchase tracker search) ─────────────────────
-function renderSearch(){
-  const catChips=`<div class="cat-chip ${selectedCatFilter==='all'?'active':''}" onclick="filterCat('all')">All</div>`+categories.map(c=>`<div class="cat-chip ${selectedCatFilter===c.id?'active':''}" onclick="filterCat('${c.id}')">${c.name}</div>`).join('');
-  document.getElementById('main').innerHTML=`
-    <div class="search-wrap">
-      <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <input type="text" id="search-input" placeholder="Search purchase history…" oninput="handleSearch(this.value)" autocomplete="off"/>
-    </div>
-    <div class="cat-filter">${catChips}</div>
-    <div id="search-results"></div>
-    <div id="recent-section"></div>`;
-  loadRecent();
-}
-function filterCat(catId){selectedCatFilter=catId;document.querySelectorAll('.cat-chip').forEach(c=>{const isAll=c.textContent==='All';c.classList.toggle('active',(isAll&&catId==='all')||(!isAll&&categories.find(cat=>cat.id===catId&&cat.name===c.textContent)));});loadRecent();}
-async function loadRecent(){
-  let catIds=categories.map(c=>c.id);if(selectedCatFilter!=='all')catIds=[selectedCatFilter];
-  if(!catIds.length){document.getElementById('recent-section').innerHTML=`<div class="empty"><div class="empty-icon">📦</div><p>No items yet.</p></div>`;return;}
-  const{data:items}=await sb.from('items').select('id,name,category_id').in('category_id',catIds).order('created_at',{ascending:false}).limit(30);
-  if(!items?.length){document.getElementById('recent-section').innerHTML=`<div class="empty"><div class="empty-icon">📦</div><p>No items yet. Log your first purchase!</p></div>`;return;}
-  const itemIds=items.map(i=>i.id);
-  const{data:purchases}=await sb.from('purchases').select('item_id,price,quantity,unit,purchased_at').in('item_id',itemIds).order('purchased_at',{ascending:false});
-  const latestMap={};(purchases||[]).forEach(p=>{if(!latestMap[p.item_id])latestMap[p.item_id]=p;});
-  const catMap=Object.fromEntries(categories.map(c=>[c.id,c.name]));
-  const label=selectedCatFilter==='all'?'Purchase History':(catMap[selectedCatFilter]||'Items');
-  let html=`<div style="font-size:13px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">${label}</div>`;
-  items.forEach(item=>{
-    const lp=latestMap[item.id];const uObj=lp?calcUnitPrice(lp.price,lp.quantity,lp.unit):null;
-    const qtyLabel=lp&&lp.quantity&&lp.unit?`${lp.quantity} ${lp.unit}`:'';
-    const stdRate=uObj&&uObj.standardRate?`${uObj.standardRate} / ${uObj.standardUnit}`:'';
-    html+=`<div class="card" style="padding:12px 16px;cursor:pointer;margin-bottom:8px;" onclick="showItemDetail('${item.id}','${esc(item.name)}')">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
-        <div><div style="font-weight:600;font-size:14px;">${item.name}</div><div style="font-size:12px;color:var(--text-muted);margin-top:2px;">${catMap[item.category_id]||''}</div>${qtyLabel?`<div style="font-size:12px;color:var(--text-muted);margin-top:1px;">Bought: ${qtyLabel}</div>`:''}</div>
-        <div style="text-align:right;flex-shrink:0;">${lp?`<div style="font-weight:700;font-size:16px;color:var(--accent);">${fmt(lp.price)}</div>${stdRate?`<div style="font-size:11px;color:var(--accent);font-weight:600;margin-top:1px;">${stdRate}</div>`:''}<div style="font-size:11px;color:var(--text-muted);margin-top:1px;">${fmtDate(lp.purchased_at)}</div>`:`<div style="font-size:12px;color:var(--text-muted);">No purchases</div>`}</div>
-      </div></div>`;
-  });
-  document.getElementById('recent-section').innerHTML=html;
-}
-async function handleSearch(q){
-  clearTimeout(searchTimeout);
-  if(!q.trim()){document.getElementById('search-results').innerHTML='';loadRecent();return;}
-  document.getElementById('recent-section').innerHTML='';
-  searchTimeout=setTimeout(async()=>{
-    let catIds=categories.map(c=>c.id);if(selectedCatFilter!=='all')catIds=[selectedCatFilter];
-    if(!catIds.length)return;
-    const{data:items}=await sb.from('items').select('id,name,category_id').in('category_id',catIds).ilike('name',`%${q}%`).limit(10);
-    if(!items?.length){document.getElementById('search-results').innerHTML=`<div class="empty"><div class="empty-icon">🔎</div><p>No items found for "${q}"</p></div>`;return;}
-    const catMap=Object.fromEntries(categories.map(c=>[c.id,c.name]));
-    const itemIds=items.map(i=>i.id);
-    const{data:purchases}=await sb.from('purchases').select('item_id,price,quantity,unit,purchased_at').in('item_id',itemIds).order('purchased_at',{ascending:false});
-    const latestMap={};(purchases||[]).forEach(p=>{if(!latestMap[p.item_id])latestMap[p.item_id]=p;});
-    let html=`<div class="search-results">`;
-    items.forEach(item=>{
-      const lp=latestMap[item.id];const uObj=lp?calcUnitPrice(lp.price,lp.quantity,lp.unit):null;
-      const qtyLabel=lp&&lp.quantity&&lp.unit?`${lp.quantity} ${lp.unit}`:'';
-      const stdRate=uObj&&uObj.standardRate?` · ${uObj.standardRate}/${uObj.standardUnit}`:'';
-      html+=`<div class="search-result-item" onclick="showItemDetail('${item.id}','${esc(item.name)}')"><div class="sri-name">${item.name}</div><div class="sri-meta">${catMap[item.category_id]||''}${lp?' · '+fmt(lp.price)+(qtyLabel?' for '+qtyLabel:'')+stdRate+' · '+fmtDate(lp.purchased_at):' · No purchases yet'}</div></div>`;
-    });
-    document.getElementById('search-results').innerHTML=html+'</div>';
-  },300);
-}
 async function showItemDetail(itemId,itemName){
   const el=document.getElementById('main');
   el.innerHTML=`<button class="back-btn" onclick="setPage('search')">← Back</button><div class="loading">Loading…</div>`;
@@ -488,32 +427,50 @@ async function saveEntry(){
 }
 
 // ── ITEM TRACKER ──────────────────────────────────────────
+let trackerCatFilter='all';
+
 async function renderTracker(){
   const el=document.getElementById('main');
   el.innerHTML=`<div class="loading">Loading…</div>`;
-  // Load from expense_entries — grouped by item_name
-  const{data:entries}=await sb.from('expense_entries').select('*').order('entered_at',{ascending:false});
-  if(!entries?.length){el.innerHTML=`<div class="empty"><div class="empty-icon">📦</div><p>No entries yet. Start logging purchases in Add tab.</p></div>`;return;}
-  // Group by item_name
+  const[{data:entries},{data:items}]=await Promise.all([
+    sb.from('expense_entries').select('*').order('entered_at',{ascending:false}),
+    sb.from('items').select('id,name,category_id').order('created_at',{ascending:false}).limit(200)
+  ]);
+  const catMap=Object.fromEntries(categories.map(c=>[c.id,c.name]));
+  // Build item map from expense_entries
   const itemMap={};
   (entries||[]).forEach(e=>{
-    if(!itemMap[e.item_name]){itemMap[e.item_name]={entries:[],latestDate:e.entered_at,category_id:e.category_id};}
+    if(!itemMap[e.item_name]){itemMap[e.item_name]={entries:[],category_id:e.category_id};}
     itemMap[e.item_name].entries.push(e);
   });
-  const catMap=Object.fromEntries(categories.map(c=>[c.id,c.name]));
-  const medMap=Object.fromEntries(expMediums.map(m=>[m.id,m.name]));
-  // Search
-  const searchEl=`<div class="search-wrap" style="margin-bottom:12px;">
+  // Also include items from purchases that may not have expense entries
+  (items||[]).forEach(i=>{if(!itemMap[i.name]){itemMap[i.name]={entries:[],category_id:i.category_id,purchaseOnly:true};}});
+
+  const catChips=`<div class="cat-chip ${trackerCatFilter==='all'?'active':''}" onclick="setTrackerCat('all')">All</div>`
+    +categories.map(c=>`<div class="cat-chip ${trackerCatFilter===c.id?'active':''}" onclick="setTrackerCat('${c.id}')">${c.name}</div>`).join('');
+
+  const searchEl=`<div class="search-wrap" style="margin-bottom:8px;">
     <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
     <input type="text" id="tracker-search" placeholder="Search items…" oninput="filterTracker(this.value)" autocomplete="off"/>
-  </div>`;
-  let html=searchEl+`<div id="tracker-list">`;
+  </div>
+  <div class="cat-filter">${catChips}</div>`;
+
+  let listHtml='';
   Object.entries(itemMap).forEach(([name,data])=>{
+    if(trackerCatFilter!=='all'&&data.category_id!==trackerCatFilter)return;
+    if(data.purchaseOnly){
+      listHtml+=`<div class="card tracker-row" data-name="${name.toLowerCase()}" style="padding:12px 16px;cursor:pointer;margin-bottom:8px;" onclick="showTrackerDetail('${esc(name)}')">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+          <div><div style="font-weight:600;font-size:14px;">${name}</div><div style="font-size:12px;color:var(--text-muted);margin-top:2px;">${catMap[data.category_id]||''}</div></div>
+          <div style="text-align:right;"><div style="font-size:12px;color:var(--text-muted);">Purchase only</div></div>
+        </div></div>`;
+      return;
+    }
     const latest=data.entries[0];
     const uObj=calcUnitPrice(latest.amount,latest.quantity,latest.unit);
     const stdRate=uObj&&uObj.standardRate?`${uObj.standardRate} / ${uObj.standardUnit}`:'';
     const qtyLabel=latest.quantity&&latest.unit?`${latest.quantity} ${latest.unit}`:'';
-    html+=`<div class="card" style="padding:12px 16px;cursor:pointer;margin-bottom:8px;" onclick="showTrackerDetail('${esc(name)}')">
+    listHtml+=`<div class="card tracker-row" data-name="${name.toLowerCase()}" style="padding:12px 16px;cursor:pointer;margin-bottom:8px;" onclick="showTrackerDetail('${esc(name)}')">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
         <div><div style="font-weight:600;font-size:14px;">${name}</div>
           <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">${catMap[data.category_id]||''}</div>
@@ -526,12 +483,19 @@ async function renderTracker(){
         </div>
       </div></div>`;
   });
-  html+=`</div>`;
-  el.innerHTML=html;
+
+  if(!listHtml) listHtml=`<div class="empty"><div class="empty-icon">📦</div><p>No items yet. Log your first purchase in ➕ Add.</p></div>`;
+  el.innerHTML=searchEl+`<div id="tracker-list">${listHtml}</div>`;
 }
+
+function setTrackerCat(catId){
+  trackerCatFilter=catId;
+  renderTracker();
+}
+
 function filterTracker(q){
-  const rows=document.querySelectorAll('#tracker-list .card');
-  rows.forEach(r=>{const name=r.querySelector('div[style*="font-weight:600"]')?.textContent||'';r.style.display=name.toLowerCase().includes(q.toLowerCase())?'':'none';});
+  const rows=document.querySelectorAll('.tracker-row');
+  rows.forEach(r=>{r.style.display=r.dataset.name?.includes(q.toLowerCase())?'':'none';});
 }
 async function showTrackerDetail(itemName){
   const el=document.getElementById('main');
@@ -863,6 +827,9 @@ async function init(){
   document.getElementById('main').innerHTML=`<div class="loading">Loading…</div>`;
   await Promise.all([loadCategories(),loadExpMediums()]);
   appReady=true;
+  // Set Items tab as active by default
+  document.getElementById('bnav-add')?.classList.remove('active');
+  document.getElementById('bnav-tracker')?.classList.add('active');
   render();
 }
 init();
