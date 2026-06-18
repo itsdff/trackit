@@ -226,8 +226,9 @@ let categories=[],expMediums=[],searchTimeout=null;
 let selectedMonth=new Date().toISOString().slice(0,7);
 let selectedCatFilter='all',expSubPage='summary';
 
-// BACK BUTTON
+// BACK BUTTON — deferred so functions are defined
 window.addEventListener('popstate',()=>{
+  if(!appReady)return;
   if(currentPage!=='search'){setPage('search');history.pushState(null,'',location.href);}
   else history.pushState(null,'',location.href);
 });
@@ -801,4 +802,70 @@ async function renderUtility(){
       </div>
       <div class="form-footer"><button class="btn btn-primary" onclick="saveReading()">Save Reading</button></div>
     </div>
-    ${recentFilled.length?`<div class="card"><div class="card-title">Recent Readings</div><div style="margin:-4px -4px;"><div class="reading-row" style="pad
+    ${recentFilled.length?`<div class="card"><div class="card-title">Recent Readings</div><div style="margin:-4px -4px;"><div class="reading-row" style="padding:8px 16px;"><div class="rr-date" style="font-weight:600;font-size:11px;text-transform:uppercase;">Date</div><div class="rr-balance" style="font-weight:600;font-size:11px;text-transform:uppercase;">Balance</div><div class="rr-consumed" style="font-weight:600;font-size:11px;text-transform:uppercase;">Used</div></div>${readingsHtml}</div></div>`:''}`;
+}
+function fillGaps(readings){
+  if(!readings.length)return[];const result=[];
+  for(let i=0;i<readings.length;i++){
+    result.push({...readings[i],interpolated:false});
+    if(i<readings.length-1){
+      const curr=new Date(readings[i].reading_date),next=new Date(readings[i+1].reading_date);
+      const days=Math.round((next-curr)/86400000);
+      if(days>1){const nR=readings[i+1].is_recharge?(readings[i+1].recharge_amount||0):0;const drop=(readings[i].balance-(readings[i+1].balance-nR))/days;for(let d=1;d<days;d++){const dt=new Date(curr.getTime()+d*86400000);result.push({id:'interp-'+dt.toISOString().split('T')[0],type:readings[i].type,reading_date:dt.toISOString().split('T')[0],balance:parseFloat(Math.max(0,readings[i].balance-drop*d).toFixed(2)),interpolated:true,is_recharge:false,recharge_amount:0});}}
+    }
+  }
+  return result.sort((a,b)=>a.reading_date.localeCompare(b.reading_date));
+}
+function toggleRechargeToggle(){
+  const cb=document.getElementById('u-is-recharge');cb.checked=!cb.checked;const checked=cb.checked;
+  const box=document.getElementById('recharge-toggle-box'),label=document.getElementById('recharge-toggle-label'),wrap=document.getElementById('recharge-toggle-wrap');
+  if(checked){box.style.background='var(--accent)';box.style.borderColor='var(--accent)';box.innerHTML='<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';label.textContent='Recharged Day';label.style.color='var(--accent)';label.style.fontWeight='600';wrap.style.borderColor='var(--accent)';wrap.style.background='var(--accent-light)';}
+  else{box.style.background='var(--surface)';box.style.borderColor='var(--border)';box.innerHTML='';label.textContent='Not a recharge day';label.style.color='var(--text-muted)';label.style.fontWeight='500';wrap.style.borderColor='var(--border)';wrap.style.background='var(--surface)';}
+  document.getElementById('recharge-field').style.display=checked?'flex':'none';
+}
+function switchUtilType(t){currentUtilType=t;renderUtility();}
+async function saveReading(){
+  const date=today();const balance=parseFloat(document.getElementById('u-balance').value);const notes=document.getElementById('u-notes').value.trim();
+  const isRecharge=document.getElementById('u-is-recharge')?.checked||false;
+  const rechargeAmount=isRecharge?parseFloat(document.getElementById('u-recharge-amount')?.value||0):0;
+  if(isNaN(balance)||balance<0){showToast('Please enter a valid balance');return;}
+  if(isRecharge&&(!rechargeAmount||rechargeAmount<=0)){showToast('Please enter the recharge amount');return;}
+  const{error}=await sb.from('utility_readings').upsert({type:currentUtilType==='electricity'?'electricity':'gas',reading_date:date,balance,notes:notes||null,is_recharge:isRecharge,recharge_amount:isRecharge?rechargeAmount:0},{onConflict:'type,reading_date'});
+  if(error){showToast('Error saving reading');return;}
+  showToast('✓ Reading saved!');renderUtility();
+}
+
+// ── MANAGE ───────────────────────────────────────────────
+async function renderManage(){
+  await loadExpMediums();
+  let catHtml=categories.length?categories.map(c=>`<span class="cat-tag">${c.name} <button class="cat-tag-del" onclick="deleteCategory('${c.id}','${c.name.replace(/'/g,"\'")}')">×</button></span>`).join(''):`<span style="font-size:13px;color:var(--text-muted);">No categories yet.</span>`;
+  let medHtml=expMediums.length?expMediums.map(m=>`<span class="cat-tag">${m.name} <button class="cat-tag-del" onclick="deleteMedium('${m.id}','${m.name.replace(/'/g,"\'")}')">×</button></span>`).join(''):`<span style="font-size:13px;color:var(--text-muted);">No mediums yet.</span>`;
+  document.getElementById('main').innerHTML=`
+    <div class="card"><div class="card-title">Purchase Categories — ${currentContext}</div>
+      <div style="margin-bottom:14px;">${catHtml}</div>
+      <div style="display:flex;gap:8px;"><input type="text" id="new-cat" placeholder="New category name…" style="flex:1;"/><button class="btn btn-primary btn-sm" onclick="addCategory()">Add</button></div>
+    </div>
+    <div class="card"><div class="card-title">💳 Payment Mediums</div>
+      <div style="margin-bottom:14px;">${medHtml}</div>
+      <div style="display:flex;gap:8px;"><input type="text" id="new-med" placeholder="e.g. Cash, bKash, Credit Card…" style="flex:1;"/><button class="btn btn-primary btn-sm" style="background:var(--exp);" onclick="addMedium()">Add</button></div>
+    </div>
+    <div class="card"><div style="font-size:13px;color:var(--text-muted);">Switch between <strong>Home</strong> and <strong>Office</strong> above to manage purchase categories for each context.</div></div>`;
+}
+async function addCategory(){const name=document.getElementById('new-cat').value.trim();if(!name)return;const{error}=await sb.from('categories').insert({name,context:currentContext});if(error){showToast('Error');return;}showToast(`✓ "${name}" added`);await loadCategories();renderManage();}
+async function deleteCategory(id,name){if(!confirm(`Delete "${name}"?`))return;await sb.from('categories').delete().eq('id',id);showToast(`Deleted "${name}"`);await loadCategories();renderManage();}
+async function addMedium(){const name=document.getElementById('new-med').value.trim();if(!name)return;const{error}=await sb.from('expense_mediums').insert({name});if(error){showToast('Error: '+error.message);return;}showToast(`✓ "${name}" added`);await loadExpMediums();renderManage();}
+async function deleteMedium(id,name){if(!confirm(`Delete medium "${name}"?`))return;await sb.from('expense_mediums').delete().eq('id',id);showToast(`Deleted "${name}"`);await loadExpMediums();renderManage();}
+
+let appReady=false;
+async function init(){
+  history.pushState(null,'',location.href);
+  initTheme();
+  document.getElementById('main').innerHTML=`<div class="loading">Loading…</div>`;
+  await Promise.all([loadCategories(),loadExpMediums()]);
+  appReady=true;
+  render();
+}
+init();
+</script>
+</body>
+</html>
