@@ -719,9 +719,13 @@ async function renderUtility(){
       </div>
       <div class="form-body">
         <div class="form-group"><label>Balance (${unit})</label><input type="number" id="u-balance" placeholder="0" min="0" step="${isGas?'0.01':'1'}" inputmode="decimal" /></div>
-        <div class="form-group" style="flex-direction:row;align-items:center;gap:10px;">
-          <input type="checkbox" id="u-is-recharge" style="width:auto;accent-color:var(--accent);" onchange="toggleRechargeField()" />
-          <label for="u-is-recharge" style="text-transform:none;font-size:14px;font-weight:500;color:var(--text);letter-spacing:0;">This is a recharge day</label>
+        <div class="form-group">
+          <label>Recharge Day?</label>
+          <div onclick="toggleRechargeToggle()" id="recharge-toggle-wrap" style="display:flex;align-items:center;gap:10px;padding:11px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;background:var(--surface);transition:border 0.15s;">
+            <div id="recharge-toggle-box" style="width:20px;height:20px;border-radius:6px;border:2px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;transition:all 0.15s;flex-shrink:0;"></div>
+            <span id="recharge-toggle-label" style="font-size:14px;font-weight:500;color:var(--text-muted);">Not a recharge day</span>
+            <input type="checkbox" id="u-is-recharge" style="display:none;" />
+          </div>
         </div>
         <div class="form-group" id="recharge-field" style="display:none;">
           <label>Recharge Amount (${unit})</label>
@@ -755,9 +759,33 @@ function fillGaps(readings){
   }
   return result.sort((a,b)=>a.reading_date.localeCompare(b.reading_date));
 }
-function toggleRechargeField(){
-  const show=document.getElementById('u-is-recharge').checked;
-  document.getElementById('recharge-field').style.display=show?'flex':'none';
+function toggleRechargeToggle(){
+  const cb=document.getElementById('u-is-recharge');
+  cb.checked=!cb.checked;
+  const checked=cb.checked;
+  const box=document.getElementById('recharge-toggle-box');
+  const label=document.getElementById('recharge-toggle-label');
+  const wrap=document.getElementById('recharge-toggle-wrap');
+  if(checked){
+    box.style.background='var(--accent)';
+    box.style.borderColor='var(--accent)';
+    box.innerHTML='<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    label.textContent='Recharged Day';
+    label.style.color='var(--accent)';
+    label.style.fontWeight='600';
+    wrap.style.borderColor='var(--accent)';
+    wrap.style.background='var(--accent-light)';
+  } else {
+    box.style.background='var(--surface)';
+    box.style.borderColor='var(--border)';
+    box.innerHTML='';
+    label.textContent='Not a recharge day';
+    label.style.color='var(--text-muted)';
+    label.style.fontWeight='500';
+    wrap.style.borderColor='var(--border)';
+    wrap.style.background='var(--surface)';
+  }
+  document.getElementById('recharge-field').style.display=checked?'flex':'none';
 }
 function switchUtilType(t){currentUtilType=t;renderUtility();}
 async function saveReading(){
