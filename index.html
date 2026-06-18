@@ -1,28 +1,14 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>TrackIt</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-/* LIGHT THEME */
-:root {
-  --bg:#F7F6F3;--surface:#FFFFFF;--surface2:#F0EEE9;--border:#E2DDD6;
-  --text:#1A1916;--text-muted:#7A7670;--accent:#2563EB;--accent-light:#EFF6FF;
-  --elec:#F59E0B;--elec-light:#FFFBEB;--gas:#10B981;--gas-light:#ECFDF5;
-  --danger:#DC2626;--warn:#D97706;--warn-light:#FFFBEB;
-  --shadow:rgba(0,0,0,0.06);--radius:12px;--radius-sm:8px;
-}
-/* DARK THEME */
-[data-theme="dark"] {
-  --bg:#0F1117;--surface:#1A1D27;--surface2:#23263A;--border:#2E3348;
-  --text:#F0EEF8;--text-muted:#7B80A0;--accent:#4F8EF7;--accent-light:#1A2644;
-  --elec:#FBBF24;--elec-light:#1F1A00;--gas:#34D399;--gas-light:#052E20;
-  --danger:#F87171;--warn:#FCD34D;--warn-light:#1F1500;
-  --shadow:rgba(0,0,0,0.3);
-}
+:root{--bg:#F7F6F3;--surface:#fff;--surface2:#F0EEE9;--border:#E2DDD6;--text:#1A1916;--text-muted:#7A7670;--accent:#2563EB;--accent-light:#EFF6FF;--elec:#F59E0B;--elec-light:#FFFBEB;--gas:#10B981;--gas-light:#ECFDF5;--exp:#8B5CF6;--exp-light:#F5F3FF;--danger:#DC2626;--warn:#D97706;--warn-light:#FFFBEB;--shadow:rgba(0,0,0,0.06);--radius:12px;--radius-sm:8px;}
+[data-theme="dark"]{--bg:#0F1117;--surface:#1A1D27;--surface2:#23263A;--border:#2E3348;--text:#F0EEF8;--text-muted:#7B80A0;--accent:#4F8EF7;--accent-light:#1A2644;--elec:#FBBF24;--elec-light:#1F1A00;--gas:#34D399;--gas-light:#052E20;--exp:#A78BFA;--exp-light:#1E1244;--danger:#F87171;--warn:#FCD34D;--warn-light:#1F1500;--shadow:rgba(0,0,0,0.3);}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;transition:background 0.2s,color 0.2s;}
 nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;position:sticky;top:0;z-index:100;}
@@ -33,12 +19,10 @@ nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 16
 .tabs{display:flex;gap:4px;}
 .tab{padding:6px 12px;border-radius:20px;border:none;background:transparent;font-size:13px;font-weight:500;color:var(--text-muted);cursor:pointer;transition:all 0.15s;}
 .tab.active{background:var(--accent);color:#fff;}
-.theme-btn{background:none;border:1px solid var(--border);border-radius:20px;padding:5px 10px;font-size:14px;cursor:pointer;color:var(--text-muted);transition:all 0.15s;}
-.theme-btn:hover{border-color:var(--accent);color:var(--accent);}
+.theme-btn{background:none;border:1px solid var(--border);border-radius:20px;padding:5px 10px;font-size:14px;cursor:pointer;color:var(--text-muted);}
 main{max-width:600px;margin:0 auto;padding:16px 16px 90px;}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px;}
 .card-title{font-family:'Sora',sans-serif;font-size:15px;font-weight:700;margin-bottom:12px;}
-
 /* SEARCH */
 .search-wrap{position:relative;margin-bottom:10px;}
 .search-wrap input{width:100%;padding:12px 16px 12px 42px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:15px;background:var(--surface);color:var(--text);outline:none;transition:border 0.15s;}
@@ -49,12 +33,10 @@ main{max-width:600px;margin:0 auto;padding:16px 16px 90px;}
 .cat-chip{padding:5px 12px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface);color:var(--text-muted);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all 0.15s;flex-shrink:0;}
 .cat-chip.active{background:var(--accent);border-color:var(--accent);color:#fff;}
 .search-results{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-top:4px;box-shadow:0 4px 16px var(--shadow);}
-.search-result-item{padding:12px 16px;cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.1s;}
+.search-result-item{padding:12px 16px;cursor:pointer;border-bottom:1px solid var(--border);}
 .search-result-item:last-child{border-bottom:none;}
-.search-result-item:hover{background:var(--bg);}
 .sri-name{font-weight:600;font-size:14px;}
 .sri-meta{font-size:12px;color:var(--text-muted);margin-top:2px;}
-
 /* SUMMARY */
 .summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
 .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;}
@@ -71,17 +53,17 @@ main{max-width:600px;margin:0 auto;padding:16px 16px 90px;}
 .ti-name{font-size:13px;font-weight:600;}
 .ti-meta{font-size:11px;color:var(--text-muted);margin-top:2px;}
 .ti-price{font-size:14px;font-weight:700;color:var(--accent);}
-
 /* ALERTS */
 .alert{border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:8px;display:flex;align-items:flex-start;gap:10px;}
 .alert.warn{background:var(--warn-light);border:1px solid #FDE68A;}
 .alert.danger{background:#FEF2F2;border:1px solid #FECACA;}
 [data-theme="dark"] .alert.danger{background:#2D1515;border-color:#7F2020;}
 .alert.info{background:var(--accent-light);border:1px solid #BFDBFE;}
+.alert.success{background:#F0FDF4;border:1px solid #86EFAC;}
+[data-theme="dark"] .alert.success{background:#052E20;border-color:#34D399;}
 .alert-icon{font-size:16px;flex-shrink:0;margin-top:1px;}
 .alert-text{font-size:13px;line-height:1.5;}
 .alert-text strong{font-weight:600;}
-
 /* ITEM DETAIL */
 .item-detail{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:16px;}
 .item-detail-header{padding:16px;border-bottom:1px solid var(--border);}
@@ -101,9 +83,7 @@ main{max-width:600px;margin:0 auto;padding:16px 16px 90px;}
 .h-badge.down{background:#D1FAE5;color:#065F46;}
 [data-theme="dark"] .h-badge.down{background:#052E20;color:#34D399;}
 .h-badge.same{background:var(--surface2);color:var(--text-muted);}
-.h-actions{display:flex;gap:8px;padding:10px 16px;border-top:1px solid var(--border);}
 .back-btn{display:flex;align-items:center;gap:6px;background:none;border:none;font-size:13px;color:var(--accent);font-weight:500;cursor:pointer;margin-bottom:12px;padding:0;}
-
 /* FORM */
 .form-sheet{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
 .form-header{padding:16px;border-bottom:1px solid var(--border);}
@@ -117,15 +97,13 @@ input:focus,select:focus{border-color:var(--accent);}
 .btn{width:100%;padding:13px;border:none;border-radius:var(--radius-sm);font-size:15px;font-weight:600;cursor:pointer;transition:opacity 0.15s;}
 .btn-primary{background:var(--accent);color:#fff;}
 .btn-primary:hover{opacity:0.88;}
-.btn-danger{background:#DC2626;color:#fff;}
+.btn-danger{background:var(--danger);color:#fff;}
 .btn-sm{width:auto;padding:9px 16px;font-size:14px;}
 .btn-outline{background:transparent;border:1.5px solid var(--border);color:var(--text);}
 .new-cat-inline{display:flex;gap:8px;margin-top:8px;align-items:center;}
 .new-cat-inline input{flex:1;padding:9px 12px;font-size:14px;}
 .edit-btn{background:none;border:1px solid var(--border);border-radius:var(--radius-sm);padding:5px 10px;font-size:12px;font-weight:600;color:var(--text-muted);cursor:pointer;}
-.edit-btn:hover{border-color:var(--accent);color:var(--accent);}
-.delete-btn{background:none;border:1px solid var(--border);border-radius:var(--radius-sm);padding:5px 10px;font-size:12px;font-weight:600;color:var(--danger);cursor:pointer;border-color:#FECACA;}
-
+.delete-btn{background:none;border:1px solid #FECACA;border-radius:var(--radius-sm);padding:5px 10px;font-size:12px;font-weight:600;color:var(--danger);cursor:pointer;}
 /* MODAL */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;display:flex;align-items:flex-end;justify-content:center;}
 .modal{background:var(--surface);border-radius:var(--radius) var(--radius) 0 0;width:100%;max-width:600px;max-height:90vh;overflow-y:auto;}
@@ -134,7 +112,6 @@ input:focus,select:focus{border-color:var(--accent);}
 .modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-muted);padding:4px;}
 .modal-body{padding:16px;display:flex;flex-direction:column;gap:14px;}
 .modal-footer{padding:16px;border-top:1px solid var(--border);display:flex;gap:8px;}
-
 /* UTILITY */
 .util-toggle{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;}
 .util-btn{padding:12px;border-radius:var(--radius-sm);border:2px solid var(--border);background:var(--surface);font-size:14px;font-weight:600;cursor:pointer;text-align:center;transition:all 0.15s;color:var(--text-muted);}
@@ -160,18 +137,48 @@ input:focus,select:focus{border-color:var(--accent);}
 .rr-consumed{font-size:12px;color:var(--text-muted);text-align:right;}
 .rr-consumed.high{color:var(--danger);font-weight:600;}
 .rr-interp{font-size:10px;color:var(--text-muted);font-style:italic;}
-
+/* EXPENSE */
+.exp-hero{background:var(--exp-light);border:1px solid var(--exp);border-radius:var(--radius);padding:20px;margin-bottom:12px;text-align:center;}
+.exp-hero-label{font-size:11px;font-weight:600;color:var(--exp);text-transform:uppercase;letter-spacing:0.5px;}
+.exp-hero-value{font-family:'Sora',sans-serif;font-size:36px;font-weight:700;color:var(--exp);margin:6px 0;}
+.exp-hero-sub{font-size:12px;color:var(--text-muted);}
+.medium-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;}
+.medium-name{font-weight:600;font-size:15px;}
+.medium-meta{font-size:12px;color:var(--text-muted);margin-top:2px;}
+.medium-amount{font-family:'Sora',sans-serif;font-size:20px;font-weight:700;color:var(--exp);text-align:right;}
+.medium-count{font-size:11px;color:var(--text-muted);margin-top:2px;text-align:right;}
+.adjust-btn{width:100%;padding:16px;border:2px dashed var(--exp);border-radius:var(--radius);background:transparent;color:var(--exp);font-size:15px;font-weight:700;cursor:pointer;text-align:center;transition:all 0.15s;margin-bottom:12px;}
+.adjust-btn:hover{background:var(--exp-light);}
+.exp-entry-row{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.exp-entry-row:last-child{border-bottom:none;}
+.exp-entry-info{flex:1;}
+.exp-entry-name{font-weight:600;font-size:14px;}
+.exp-entry-meta{font-size:12px;color:var(--text-muted);margin-top:2px;}
+.exp-entry-right{text-align:right;flex-shrink:0;}
+.exp-entry-amount{font-weight:700;font-size:15px;color:var(--exp);}
+.exp-entry-medium{font-size:11px;color:var(--text-muted);margin-top:2px;}
+.adj-badge{display:inline-flex;align-items:center;gap:6px;background:var(--gas-light);border:1px solid var(--gas);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:8px;width:100%;}
+.adj-badge-text{font-size:13px;color:var(--gas);font-weight:600;}
 /* MANAGE */
 .cat-tag{display:inline-flex;align-items:center;gap:6px;background:var(--surface2);border-radius:20px;padding:4px 12px;font-size:13px;margin:4px;}
 .cat-tag-del{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:14px;line-height:1;}
+/* MONTH FILTER */
 .month-filter{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px;scrollbar-width:none;}
 .month-filter::-webkit-scrollbar{display:none;}
 .month-chip{padding:6px 14px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface);color:var(--text-muted);font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;transition:all 0.15s;}
 .month-chip.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+/* SUB NAV */
+.sub-nav{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;margin-bottom:14px;scrollbar-width:none;}
+.sub-nav::-webkit-scrollbar{display:none;}
+.sub-btn{padding:7px 16px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface);color:var(--text-muted);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all 0.15s;flex-shrink:0;}
+.sub-btn.active{background:var(--exp);border-color:var(--exp);color:#fff;}
+/* BOTTOM NAV */
 .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);display:flex;z-index:100;}
-.bnav-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 0 10px;font-size:10px;font-weight:600;color:var(--text-muted);cursor:pointer;gap:3px;transition:color 0.15s;border:none;background:none;}
+.bnav-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 0 10px;font-size:9px;font-weight:600;color:var(--text-muted);cursor:pointer;gap:3px;transition:color 0.15s;border:none;background:none;}
 .bnav-item.active{color:var(--accent);}
+.bnav-item.exp-tab.active{color:var(--exp);}
 .bnav-icon{font-size:18px;}
+/* MISC */
 .empty{text-align:center;padding:40px 20px;color:var(--text-muted);}
 .empty-icon{font-size:36px;margin-bottom:8px;}
 .empty p{font-size:14px;}
@@ -181,33 +188,6 @@ input:focus,select:focus{border-color:var(--accent);}
 .toast.show{opacity:1;}
 body.keyboard-open .bottom-nav{display:none;}
 body.keyboard-open main{padding-bottom:16px;}
-
-/* EXPENSE TAB */
---expense:#8B5CF6;--expense-light:#F5F3FF;
-.xp-sub-nav{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;margin-bottom:14px;scrollbar-width:none;}
-.xp-sub-nav::-webkit-scrollbar{display:none;}
-.xp-sub-btn{padding:7px 16px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface);color:var(--text-muted);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all 0.15s;flex-shrink:0;}
-.xp-sub-btn.active{background:#8B5CF6;border-color:#8B5CF6;color:#fff;}
-.xp-amount-hero{text-align:center;padding:20px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;}
-.xp-amount-month{font-size:12px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;}
-.xp-amount-val{font-family:'Sora',sans-serif;font-size:36px;font-weight:700;color:#8B5CF6;margin:6px 0;}
-.xp-entry{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;}
-.xp-entry:last-child{border-bottom:none;}
-.xp-entry-left{flex:1;}
-.xp-entry-cat{font-size:13px;font-weight:600;}
-.xp-entry-meta{font-size:12px;color:var(--text-muted);margin-top:2px;}
-.xp-entry-right{text-align:right;flex-shrink:0;}
-.xp-entry-amount{font-weight:700;font-size:15px;color:#8B5CF6;}
-.xp-entry-medium{font-size:11px;color:var(--text-muted);margin-top:2px;}
-.xp-medium-badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;background:var(--surface2);color:var(--text-muted);}
-.chart-wrap{width:100%;height:200px;display:flex;align-items:center;justify-content:center;}
-.xp-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
-.xp-bar-label{font-size:12px;font-weight:500;width:100px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.xp-bar-outer{flex:1;height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;}
-.xp-bar-inner{height:100%;border-radius:4px;background:#8B5CF6;}
-.xp-bar-amt{font-size:12px;font-weight:600;color:var(--text-muted);width:65px;text-align:right;flex-shrink:0;}
-[data-theme="dark"] .xp-sub-btn.active{background:#7C3AED;border-color:#7C3AED;}
-
 </style>
 </head>
 <body>
@@ -227,9 +207,9 @@ body.keyboard-open main{padding-bottom:16px;}
 <div class="bottom-nav">
   <button class="bnav-item active" id="bnav-search" onclick="setPage('search')"><span class="bnav-icon">🔍</span>Search</button>
   <button class="bnav-item" id="bnav-add" onclick="setPage('add')"><span class="bnav-icon">➕</span>Add</button>
-  <button class="bnav-item" id="bnav-summary" onclick="setPage('summary')"><span class="bnav-icon">📊</span>Summary</button>
-  <button class="bnav-item" id="bnav-utility" onclick="setPage('utility')"><span class="bnav-icon">⚡</span>Utilities</button>
-  <button class="bnav-item" id="bnav-expenses" onclick="setPage('expenses')"><span class="bnav-icon">💸</span>Expenses</button>
+  <button class="bnav-item" id="bnav-tracker" onclick="setPage('tracker')"><span class="bnav-icon">📦</span>Items</button>
+  <button class="bnav-item exp-tab" id="bnav-expenses" onclick="setPage('expenses')"><span class="bnav-icon">💸</span>Expenses</button>
+  <button class="bnav-item" id="bnav-utility" onclick="setPage('utility')"><span class="bnav-icon">⚡</span>Utils</button>
   <button class="bnav-item" id="bnav-manage" onclick="setPage('manage')"><span class="bnav-icon">⚙️</span>Manage</button>
 </div>
 <div id="modal-container"></div>
@@ -239,207 +219,136 @@ const SUPABASE_URL='https://vdbsyriaxijphnqkcbag.supabase.co';
 const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkYnN5cmlheGlqcGhucWtjYmFnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzMzc1MzUsImV4cCI6MjA5NjkxMzUzNX0.yTbee4O0G8ypAX2363mOdlFr2p0neYQSq4j8eXrySCk';
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const UNITS=['pcs','kg','g','litre','ml','pack','box','dozen','roll','bottle','bag','sheet','metre'];
-
-// BACK BUTTON — go to search first, then block
-window.addEventListener('popstate',()=>{
-  if(currentPage!=='search'){setPage('search');history.pushState(null,'',location.href);}
-  else{history.pushState(null,'',location.href);}
-});
-const ELEC_DEMAND_CHARGE=6*42;
-const ELEC_ALERT_THRESHOLD=80;
-const GAS_METER_CHARGE=200;
-const GAS_RATE=18;
+const ELEC_DEMAND_CHARGE=6*42,ELEC_ALERT_THRESHOLD=80,GAS_METER_CHARGE=200,GAS_RATE=18;
 
 let currentContext='Home',currentPage='search',currentUtilType='electricity';
-let categories=[],searchTimeout=null,selectedMonth=new Date().toISOString().slice(0,7);
-let selectedCatFilter='all';
+let categories=[],expMediums=[],searchTimeout=null;
+let selectedMonth=new Date().toISOString().slice(0,7);
+let selectedCatFilter='all',expSubPage='summary';
+
+// BACK BUTTON
+window.addEventListener('popstate',()=>{
+  if(currentPage!=='search'){setPage('search');history.pushState(null,'',location.href);}
+  else history.pushState(null,'',location.href);
+});
 
 // THEME
-function initTheme(){
-  const saved=localStorage.getItem('trackit-theme')||'light';
-  document.documentElement.setAttribute('data-theme',saved);
-  document.getElementById('theme-btn').textContent=saved==='dark'?'☀️':'🌙';
-}
-function toggleTheme(){
-  const current=document.documentElement.getAttribute('data-theme');
-  const next=current==='dark'?'light':'dark';
-  document.documentElement.setAttribute('data-theme',next);
-  localStorage.setItem('trackit-theme',next);
-  document.getElementById('theme-btn').textContent=next==='dark'?'☀️':'🌙';
-}
+function initTheme(){const s=localStorage.getItem('trackit-theme')||'light';document.documentElement.setAttribute('data-theme',s);document.getElementById('theme-btn').textContent=s==='dark'?'☀️':'🌙';}
+function toggleTheme(){const c=document.documentElement.getAttribute('data-theme'),n=c==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',n);localStorage.setItem('trackit-theme',n);document.getElementById('theme-btn').textContent=n==='dark'?'☀️':'🌙';}
 
 // KEYBOARD FIX
-if(window.visualViewport){
-  let lastH=window.visualViewport.height;
-  window.visualViewport.addEventListener('resize',()=>{
-    const h=window.visualViewport.height;
-    if(h<lastH-100){document.body.classList.add('keyboard-open');setTimeout(()=>{const el=document.activeElement;if(el)el.scrollIntoView({behavior:'smooth',block:'center'});},100);}
-    else document.body.classList.remove('keyboard-open');
-    lastH=h;
-  });
-}
+if(window.visualViewport){let lH=window.visualViewport.height;window.visualViewport.addEventListener('resize',()=>{const h=window.visualViewport.height;if(h<lH-100){document.body.classList.add('keyboard-open');setTimeout(()=>{const e=document.activeElement;if(e)e.scrollIntoView({behavior:'smooth',block:'center'});},100);}else document.body.classList.remove('keyboard-open');lH=h;});}
 
-function switchContext(ctx){
-  currentContext=ctx;selectedCatFilter='all';
-  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',(i===0&&ctx==='Home')||(i===1&&ctx==='Office')));
-  loadCategories().then(()=>render());
-}
-function setPage(p){
-  currentPage=p;
-  document.querySelectorAll('.bnav-item').forEach(b=>b.classList.remove('active'));
-  document.getElementById('bnav-'+p)?.classList.add('active');
-  render();
-}
-async function loadCategories(){
-  const{data}=await sb.from('categories').select('*').eq('context',currentContext).order('name');
-  categories=data||[];
-}
+function switchContext(ctx){currentContext=ctx;selectedCatFilter='all';document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',(i===0&&ctx==='Home')||(i===1&&ctx==='Office')));loadCategories().then(()=>render());}
+function setPage(p){currentPage=p;document.querySelectorAll('.bnav-item').forEach(b=>b.classList.remove('active'));const btn=document.getElementById('bnav-'+p);if(btn)btn.classList.add('active');render();}
+async function loadCategories(){const{data}=await sb.from('categories').select('*').eq('context',currentContext).order('name');categories=data||[];}
+async function loadExpMediums(){const{data}=await sb.from('expense_mediums').select('*').order('name');expMediums=data||[];}
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
 function fmt(n){return '৳'+Number(n).toLocaleString('en-BD');}
 function fmtDate(d){return new Date(d).toLocaleDateString('en-BD',{day:'numeric',month:'short',year:'numeric'});}
 function fmtDateShort(d){return new Date(d).toLocaleDateString('en-BD',{day:'numeric',month:'short'});}
 function calcUnitPrice(price,qty,unit){
   if(!qty||qty<=0||!unit)return null;
-  const perUnit=price/qty;
-  const result={perUnit:fmt(Math.round(perUnit*100)/100)+' / '+unit,standardRate:null,standardUnit:null};
-  if(unit==='g'){result.standardRate=fmt(Math.round(perUnit*1000));result.standardUnit='kg';}
-  else if(unit==='ml'){result.standardRate=fmt(Math.round(perUnit*1000));result.standardUnit='litre';}
-  else if(unit==='kg'||unit==='litre'||unit==='pcs'||unit==='pack'||unit==='box'||unit==='bottle'||unit==='bag'||unit==='roll'||unit==='sheet'||unit==='dozen'||unit==='metre'){result.standardRate=fmt(Math.round(perUnit*100)/100);result.standardUnit=unit==='pcs'?'pc':unit;}
-  return result;
+  const p=price/qty;
+  const r={perUnit:fmt(Math.round(p*100)/100)+' / '+unit,standardRate:null,standardUnit:null};
+  if(unit==='g'){r.standardRate=fmt(Math.round(p*1000));r.standardUnit='kg';}
+  else if(unit==='ml'){r.standardRate=fmt(Math.round(p*1000));r.standardUnit='litre';}
+  else if(['kg','litre','pcs','pack','box','bottle','bag','roll','sheet','dozen','metre'].includes(unit)){r.standardRate=fmt(Math.round(p*100)/100);r.standardUnit=unit==='pcs'?'pc':unit;}
+  return r;
 }
-function getMonths(){
-  const months=[],now=new Date();
-  for(let i=0;i<6;i++){const d=new Date(now.getFullYear(),now.getMonth()-i,1);months.push({label:d.toLocaleDateString('en-BD',{month:'short',year:'numeric'}),value:`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`});}
-  return months;
-}
+function getMonths(){const m=[],now=new Date();for(let i=0;i<6;i++){const d=new Date(now.getFullYear(),now.getMonth()-i,1);m.push({label:d.toLocaleDateString('en-BD',{month:'short',year:'numeric'}),value:`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`});}return m;}
 function esc(s){return s.replace(/'/g,"\\'").replace(/"/g,'&quot;');}
-function daysInMonth(ym){const[y,m]=ym.split('-').map(Number);return new Date(y,m,0).getDate();}
 function today(){return new Date().toISOString().split('T')[0];}
-function daysRemaining(ym){const[y,m]=ym.split('-').map(Number);const end=new Date(y,m,0);const now=new Date();return Math.max(0,Math.ceil((end-now)/86400000));}
+function daysInMonth(ym){const[y,m]=ym.split('-').map(Number);return new Date(y,m,0).getDate();}
 function render(){
   if(currentPage==='search')renderSearch();
   else if(currentPage==='add')renderAdd();
-  else if(currentPage==='summary')renderSummary();
-  else if(currentPage==='utility')renderUtility();
+  else if(currentPage==='tracker')renderTracker();
   else if(currentPage==='expenses')renderExpenses();
+  else if(currentPage==='utility')renderUtility();
   else if(currentPage==='manage')renderManage();
 }
 
-// ── MODAL ────────────────────────────────────────────────
-function showModal(html){
-  document.getElementById('modal-container').innerHTML=`<div class="modal-overlay" onclick="closeModalOnOverlay(event)">${html}</div>`;
-}
+// MODAL
+function showModal(html){document.getElementById('modal-container').innerHTML=`<div class="modal-overlay" onclick="closeModalOnOverlay(event)">${html}</div>`;}
 function closeModal(){document.getElementById('modal-container').innerHTML='';}
 function closeModalOnOverlay(e){if(e.target.classList.contains('modal-overlay'))closeModal();}
 
-// ── SEARCH ───────────────────────────────────────────────
+// ── SEARCH (purchase tracker search) ─────────────────────
 function renderSearch(){
-  const catChips=`<div class="cat-chip ${selectedCatFilter==='all'?'active':''}" onclick="filterCat('all')">All</div>`
-    +categories.map(c=>`<div class="cat-chip ${selectedCatFilter===c.id?'active':''}" onclick="filterCat('${c.id}')">${c.name}</div>`).join('');
+  const catChips=`<div class="cat-chip ${selectedCatFilter==='all'?'active':''}" onclick="filterCat('all')">All</div>`+categories.map(c=>`<div class="cat-chip ${selectedCatFilter===c.id?'active':''}" onclick="filterCat('${c.id}')">${c.name}</div>`).join('');
   document.getElementById('main').innerHTML=`
     <div class="search-wrap">
       <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <input type="text" id="search-input" placeholder="Search items…" oninput="handleSearch(this.value)" autocomplete="off" />
+      <input type="text" id="search-input" placeholder="Search purchase history…" oninput="handleSearch(this.value)" autocomplete="off"/>
     </div>
     <div class="cat-filter">${catChips}</div>
     <div id="search-results"></div>
     <div id="recent-section"></div>`;
   loadRecent();
 }
-
-function filterCat(catId){
-  selectedCatFilter=catId;
-  const chips=document.querySelectorAll('.cat-chip');
-  chips.forEach(c=>{
-    const isAll=c.textContent==='All';
-    c.classList.toggle('active',(isAll&&catId==='all')||(!isAll&&categories.find(cat=>cat.id===catId&&cat.name===c.textContent)));
-  });
-  loadRecent();
-}
-
+function filterCat(catId){selectedCatFilter=catId;document.querySelectorAll('.cat-chip').forEach(c=>{const isAll=c.textContent==='All';c.classList.toggle('active',(isAll&&catId==='all')||(!isAll&&categories.find(cat=>cat.id===catId&&cat.name===c.textContent)));});loadRecent();}
 async function loadRecent(){
-  let catIds=categories.map(c=>c.id);
-  if(selectedCatFilter!=='all')catIds=[selectedCatFilter];
+  let catIds=categories.map(c=>c.id);if(selectedCatFilter!=='all')catIds=[selectedCatFilter];
   if(!catIds.length){document.getElementById('recent-section').innerHTML=`<div class="empty"><div class="empty-icon">📦</div><p>No items yet.</p></div>`;return;}
   const{data:items}=await sb.from('items').select('id,name,category_id').in('category_id',catIds).order('created_at',{ascending:false}).limit(30);
-  if(!items?.length){document.getElementById('recent-section').innerHTML=`<div class="empty"><div class="empty-icon">📦</div><p>No items yet. Add your first purchase!</p></div>`;return;}
+  if(!items?.length){document.getElementById('recent-section').innerHTML=`<div class="empty"><div class="empty-icon">📦</div><p>No items yet. Log your first purchase!</p></div>`;return;}
   const itemIds=items.map(i=>i.id);
   const{data:purchases}=await sb.from('purchases').select('item_id,price,quantity,unit,purchased_at').in('item_id',itemIds).order('purchased_at',{ascending:false});
-  const latestMap={};
-  (purchases||[]).forEach(p=>{if(!latestMap[p.item_id])latestMap[p.item_id]=p;});
+  const latestMap={};(purchases||[]).forEach(p=>{if(!latestMap[p.item_id])latestMap[p.item_id]=p;});
   const catMap=Object.fromEntries(categories.map(c=>[c.id,c.name]));
-  const label=selectedCatFilter==='all'?'Recent Items':(catMap[selectedCatFilter]||'Items');
+  const label=selectedCatFilter==='all'?'Purchase History':(catMap[selectedCatFilter]||'Items');
   let html=`<div style="font-size:13px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">${label}</div>`;
   items.forEach(item=>{
-    const lp=latestMap[item.id];
-    const uObj=lp?calcUnitPrice(lp.price,lp.quantity,lp.unit):null;
+    const lp=latestMap[item.id];const uObj=lp?calcUnitPrice(lp.price,lp.quantity,lp.unit):null;
     const qtyLabel=lp&&lp.quantity&&lp.unit?`${lp.quantity} ${lp.unit}`:'';
     const stdRate=uObj&&uObj.standardRate?`${uObj.standardRate} / ${uObj.standardUnit}`:'';
     html+=`<div class="card" style="padding:12px 16px;cursor:pointer;margin-bottom:8px;" onclick="showItemDetail('${item.id}','${esc(item.name)}')">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
-        <div>
-          <div style="font-weight:600;font-size:14px;">${item.name}</div>
-          <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">${catMap[item.category_id]||''}</div>
-          ${qtyLabel?`<div style="font-size:12px;color:var(--text-muted);margin-top:1px;">Bought: ${qtyLabel}</div>`:''}
-        </div>
-        <div style="text-align:right;flex-shrink:0;">
-          ${lp?`<div style="font-weight:700;font-size:16px;color:var(--accent);">${fmt(lp.price)}</div>
-            ${stdRate?`<div style="font-size:11px;color:var(--accent);font-weight:600;margin-top:1px;">${stdRate}</div>`:''}
-            <div style="font-size:11px;color:var(--text-muted);margin-top:1px;">${fmtDate(lp.purchased_at)}</div>`
-          :`<div style="font-size:12px;color:var(--text-muted);">No purchases</div>`}
-        </div>
+        <div><div style="font-weight:600;font-size:14px;">${item.name}</div><div style="font-size:12px;color:var(--text-muted);margin-top:2px;">${catMap[item.category_id]||''}</div>${qtyLabel?`<div style="font-size:12px;color:var(--text-muted);margin-top:1px;">Bought: ${qtyLabel}</div>`:''}</div>
+        <div style="text-align:right;flex-shrink:0;">${lp?`<div style="font-weight:700;font-size:16px;color:var(--accent);">${fmt(lp.price)}</div>${stdRate?`<div style="font-size:11px;color:var(--accent);font-weight:600;margin-top:1px;">${stdRate}</div>`:''}<div style="font-size:11px;color:var(--text-muted);margin-top:1px;">${fmtDate(lp.purchased_at)}</div>`:`<div style="font-size:12px;color:var(--text-muted);">No purchases</div>`}</div>
       </div></div>`;
   });
   document.getElementById('recent-section').innerHTML=html;
 }
-
 async function handleSearch(q){
   clearTimeout(searchTimeout);
   if(!q.trim()){document.getElementById('search-results').innerHTML='';loadRecent();return;}
   document.getElementById('recent-section').innerHTML='';
   searchTimeout=setTimeout(async()=>{
-    let catIds=categories.map(c=>c.id);
-    if(selectedCatFilter!=='all')catIds=[selectedCatFilter];
+    let catIds=categories.map(c=>c.id);if(selectedCatFilter!=='all')catIds=[selectedCatFilter];
     if(!catIds.length)return;
     const{data:items}=await sb.from('items').select('id,name,category_id').in('category_id',catIds).ilike('name',`%${q}%`).limit(10);
     if(!items?.length){document.getElementById('search-results').innerHTML=`<div class="empty"><div class="empty-icon">🔎</div><p>No items found for "${q}"</p></div>`;return;}
     const catMap=Object.fromEntries(categories.map(c=>[c.id,c.name]));
     const itemIds=items.map(i=>i.id);
     const{data:purchases}=await sb.from('purchases').select('item_id,price,quantity,unit,purchased_at').in('item_id',itemIds).order('purchased_at',{ascending:false});
-    const latestMap={};
-    (purchases||[]).forEach(p=>{if(!latestMap[p.item_id])latestMap[p.item_id]=p;});
+    const latestMap={};(purchases||[]).forEach(p=>{if(!latestMap[p.item_id])latestMap[p.item_id]=p;});
     let html=`<div class="search-results">`;
     items.forEach(item=>{
-      const lp=latestMap[item.id];
-      const uObj=lp?calcUnitPrice(lp.price,lp.quantity,lp.unit):null;
+      const lp=latestMap[item.id];const uObj=lp?calcUnitPrice(lp.price,lp.quantity,lp.unit):null;
       const qtyLabel=lp&&lp.quantity&&lp.unit?`${lp.quantity} ${lp.unit}`:'';
       const stdRate=uObj&&uObj.standardRate?` · ${uObj.standardRate}/${uObj.standardUnit}`:'';
-      html+=`<div class="search-result-item" onclick="showItemDetail('${item.id}','${esc(item.name)}')">
-        <div class="sri-name">${item.name}</div>
-        <div class="sri-meta">${catMap[item.category_id]||''}${lp?' · '+fmt(lp.price)+(qtyLabel?' for '+qtyLabel:'')+stdRate+' · '+fmtDate(lp.purchased_at):' · No purchases yet'}</div></div>`;
+      html+=`<div class="search-result-item" onclick="showItemDetail('${item.id}','${esc(item.name)}')"><div class="sri-name">${item.name}</div><div class="sri-meta">${catMap[item.category_id]||''}${lp?' · '+fmt(lp.price)+(qtyLabel?' for '+qtyLabel:'')+stdRate+' · '+fmtDate(lp.purchased_at):' · No purchases yet'}</div></div>`;
     });
     document.getElementById('search-results').innerHTML=html+'</div>';
   },300);
 }
-
 async function showItemDetail(itemId,itemName){
   const el=document.getElementById('main');
   el.innerHTML=`<button class="back-btn" onclick="setPage('search')">← Back</button><div class="loading">Loading…</div>`;
   const{data:purchases}=await sb.from('purchases').select('*').eq('item_id',itemId).order('purchased_at',{ascending:false});
   if(!purchases?.length){el.innerHTML=`<button class="back-btn" onclick="setPage('search')">← Back</button><div class="item-detail"><div class="item-detail-header"><div class="item-name-big">${itemName}</div></div><div class="empty"><p>No purchases yet.</p></div></div>`;return;}
-  const latest=purchases[0];
-  const latestUObj=calcUnitPrice(latest.price,latest.quantity,latest.unit);
+  const latest=purchases[0];const latestUObj=calcUnitPrice(latest.price,latest.quantity,latest.unit);
   const latestStdRate=latestUObj&&latestUObj.standardRate?`${latestUObj.standardRate} / ${latestUObj.standardUnit}`:null;
   const latestQtyLabel=latest.quantity&&latest.unit?`${latest.quantity} ${latest.unit}`:'';
   let html=`<button class="back-btn" onclick="setPage('search')">← Back</button>
-    <div class="item-detail">
-      <div class="item-detail-header">
-        <div class="item-name-big">${itemName}</div>
-        <div class="item-price-row">
-          <div><div class="price-label">Last bought${latestQtyLabel?' · '+latestQtyLabel:''}</div><div class="latest-price">${fmt(latest.price)}</div><div class="price-label">${fmtDate(latest.purchased_at)}</div></div>
-          ${latestStdRate?`<div class="unit-price-pill">📦 ${latestStdRate}</div>`:''}
-        </div>
-      </div><div>`;
+    <div class="item-detail"><div class="item-detail-header">
+      <div class="item-name-big">${itemName}</div>
+      <div class="item-price-row">
+        <div><div class="price-label">Last bought${latestQtyLabel?' · '+latestQtyLabel:''}</div><div class="latest-price">${fmt(latest.price)}</div><div class="price-label">${fmtDate(latest.purchased_at)}</div></div>
+        ${latestStdRate?`<div class="unit-price-pill">📦 ${latestStdRate}</div>`:''}
+      </div></div><div>`;
   purchases.forEach((p,i)=>{
     const prev=purchases[i+1];let badge='';
     if(prev){const diff=((p.price-prev.price)/prev.price)*100;if(diff>5)badge=`<span class="h-badge up">↑${Math.round(diff)}%</span>`;else if(diff<-5)badge=`<span class="h-badge down">↓${Math.abs(Math.round(diff))}%</span>`;else badge=`<span class="h-badge same">≈same</span>`;}
@@ -447,51 +356,31 @@ async function showItemDetail(itemId,itemName){
     const qtyLabel=p.quantity&&p.unit?`${p.quantity} ${p.unit}`:'';
     const stdRate=uObj&&uObj.standardRate?`${uObj.standardRate} / ${uObj.standardUnit}`:null;
     const meta=[p.vendor||null,p.notes||null].filter(Boolean).join(' · ');
-    html+=`<div class="history-row">
-      <div class="h-date">${fmtDate(p.purchased_at)}</div>
-      <div class="h-main">
-        <div class="h-price">${fmt(p.price)}${qtyLabel?` <span style="font-size:12px;font-weight:400;color:var(--text-muted);">for ${qtyLabel}</span>`:''}</div>
-        ${stdRate?`<div class="h-unit-price">≈ ${stdRate}</div>`:''}
-        ${meta?`<div class="h-meta">${meta}</div>`:''}
-      </div>
-      <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;">
-        ${badge}
-        <button class="edit-btn" onclick="openEditPurchase('${p.id}','${esc(itemName)}','${itemId}')">✏️ Edit</button>
+    html+=`<div class="history-row"><div class="h-date">${fmtDate(p.purchased_at)}</div>
+      <div class="h-main"><div class="h-price">${fmt(p.price)}${qtyLabel?` <span style="font-size:12px;font-weight:400;color:var(--text-muted);">for ${qtyLabel}</span>`:''}</div>
+      ${stdRate?`<div class="h-unit-price">≈ ${stdRate}</div>`:''}${meta?`<div class="h-meta">${meta}</div>`:''}</div>
+      <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;">${badge}
+        <button class="edit-btn" onclick="openEditPurchase('${p.id}','${esc(itemName)}','${itemId}')">✏️</button>
         <button class="delete-btn" onclick="deletePurchase('${p.id}','${itemId}','${esc(itemName)}')">🗑</button>
-      </div>
-    </div>`;
+      </div></div>`;
   });
   el.innerHTML=html+'</div></div>';
 }
-
-// ── EDIT PURCHASE ─────────────────────────────────────────
 async function openEditPurchase(purchaseId,itemName,itemId){
-  const{data:p}=await sb.from('purchases').select('*').eq('id',purchaseId).single();
-  if(!p)return;
-  const catOptions=categories.map(c=>`<option value="${c.id}">  ${c.name}</option>`).join('');
-  const unitOptions=UNITS.map(u=>`<option value="${u}" ${p.unit===u?'selected':''}>${u}</option>`).join('');
-  showModal(`<div class="modal">
-    <div class="modal-header">
-      <div class="modal-title">Edit — ${itemName}</div>
-      <button class="modal-close" onclick="closeModal()">✕</button>
-    </div>
+  const{data:p}=await sb.from('purchases').select('*').eq('id',purchaseId).single();if(!p)return;
+  const unitOpts=UNITS.map(u=>`<option value="${u}" ${p.unit===u?'selected':''}>${u}</option>`).join('');
+  showModal(`<div class="modal"><div class="modal-header"><div class="modal-title">Edit — ${itemName}</div><button class="modal-close" onclick="closeModal()">✕</button></div>
     <div class="modal-body">
-      <div class="form-group"><label>Price (৳)</label><input type="number" id="ep-price" value="${p.price}" inputmode="decimal" /></div>
-      <div class="form-row">
-        <div class="form-group"><label>Quantity</label><input type="number" id="ep-qty" value="${p.quantity||''}" step="any" inputmode="decimal" /></div>
-        <div class="form-group"><label>Unit</label><select id="ep-unit"><option value="">—</option>${unitOptions}</select></div>
-      </div>
-      <div class="form-group"><label>Date</label><input type="date" id="ep-date" value="${p.purchased_at}" /></div>
-      <div class="form-group"><label>Vendor</label><input type="text" id="ep-vendor" value="${p.vendor||''}" /></div>
-      <div class="form-group"><label>Notes</label><input type="text" id="ep-notes" value="${p.notes||''}" /></div>
+      <div class="form-group"><label>Price (৳)</label><input type="number" id="ep-price" value="${p.price}" inputmode="decimal"/></div>
+      <div class="form-row"><div class="form-group"><label>Quantity</label><input type="number" id="ep-qty" value="${p.quantity||''}" step="any" inputmode="decimal"/></div>
+      <div class="form-group"><label>Unit</label><select id="ep-unit"><option value="">—</option>${unitOpts}</select></div></div>
+      <div class="form-group"><label>Date</label><input type="date" id="ep-date" value="${p.purchased_at}"/></div>
+      <div class="form-group"><label>Vendor</label><input type="text" id="ep-vendor" value="${p.vendor||''}"/></div>
+      <div class="form-group"><label>Notes</label><input type="text" id="ep-notes" value="${p.notes||''}"/></div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-outline btn-sm" onclick="closeModal()">Cancel</button>
-      <button class="btn btn-primary btn-sm" style="flex:1;" onclick="saveEditPurchase('${purchaseId}','${itemId}','${esc(itemName)}')">Save Changes</button>
-    </div>
-  </div>`);
+    <div class="modal-footer"><button class="btn btn-outline btn-sm" onclick="closeModal()">Cancel</button>
+    <button class="btn btn-primary btn-sm" style="flex:1;" onclick="saveEditPurchase('${purchaseId}','${itemId}','${esc(itemName)}')">Save</button></div></div>`);
 }
-
 async function saveEditPurchase(purchaseId,itemId,itemName){
   const price=parseFloat(document.getElementById('ep-price').value);
   const qty=parseFloat(document.getElementById('ep-qty').value)||null;
@@ -504,52 +393,56 @@ async function saveEditPurchase(purchaseId,itemId,itemName){
   if(error){showToast('Error saving');return;}
   showToast('✓ Updated!');closeModal();showItemDetail(itemId,itemName);
 }
-
 async function deletePurchase(purchaseId,itemId,itemName){
   if(!confirm('Delete this purchase entry?'))return;
   await sb.from('purchases').delete().eq('id',purchaseId);
   showToast('Deleted');showItemDetail(itemId,itemName);
 }
 
-// ── ADD ──────────────────────────────────────────────────
+// ── ADD (unified — logs as purchase + expense entry) ──────
 function renderAdd(){
-  const catOptions=categories.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
-  const unitOptions=UNITS.map(u=>`<option value="${u}">${u}</option>`).join('');
+  const catOpts=categories.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  const medOpts=expMediums.map(m=>`<option value="${m.id}">${m.name}</option>`).join('');
+  const unitOpts=UNITS.map(u=>`<option value="${u}">${u}</option>`).join('');
   document.getElementById('main').innerHTML=`
     <div class="form-sheet">
-      <div class="form-header"><div class="card-title" style="margin-bottom:0;">Log a Purchase</div></div>
+      <div class="form-header"><div class="card-title" style="margin-bottom:0;">Log Purchase & Expense</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Saves to both item tracker and expense ledger</div></div>
       <div class="form-body">
         <div class="form-group"><label>Item Name</label>
-          <input type="text" id="f-item" placeholder="e.g. Soybean Oil, A4 Paper" list="item-suggestions" autocomplete="off" oninput="fetchItemSuggestions(this.value)" />
+          <input type="text" id="f-item" placeholder="e.g. Soybean Oil, Cucumber" list="item-suggestions" autocomplete="off" oninput="fetchItemSuggestions(this.value)"/>
           <datalist id="item-suggestions"></datalist></div>
         <div class="form-group"><label>Category</label>
           <select id="f-cat" onchange="handleCatChange(this.value)">
-            <option value="">Select category…</option>${catOptions}<option value="__new__">+ Add new category</option>
+            <option value="">Select category…</option>${catOpts}<option value="__new__">+ Add new category</option>
           </select>
           <div id="new-cat-wrap" style="display:none;" class="new-cat-inline">
-            <input type="text" id="f-new-cat" placeholder="Category name…" />
+            <input type="text" id="f-new-cat" placeholder="Category name…"/>
             <button class="btn btn-primary btn-sm" onclick="saveInlineCat()">Add</button>
             <button class="btn btn-outline btn-sm" onclick="cancelInlineCat()">✕</button>
           </div></div>
+        <div class="form-group"><label>Payment Medium</label>
+          <select id="f-med">
+            <option value="">Select medium…</option>${medOpts}
+          </select></div>
         <div class="form-row">
-          <div class="form-group"><label>Price (৳)</label><input type="number" id="f-price" placeholder="0" min="0" inputmode="decimal" oninput="updateUnitPreview()" /></div>
-          <div class="form-group"><label>Quantity</label><input type="number" id="f-qty" placeholder="1" min="0" step="any" inputmode="decimal" oninput="updateUnitPreview()" /></div>
+          <div class="form-group"><label>Amount (৳)</label><input type="number" id="f-price" placeholder="0" min="0" inputmode="decimal" oninput="updateUnitPreview()"/></div>
+          <div class="form-group"><label>Quantity</label><input type="number" id="f-qty" placeholder="1" min="0" step="any" inputmode="decimal" oninput="updateUnitPreview()"/></div>
         </div>
         <div class="form-group"><label>Unit</label>
-          <select id="f-unit" onchange="updateUnitPreview()"><option value="">Select unit…</option>${unitOptions}</select>
+          <select id="f-unit" onchange="updateUnitPreview()"><option value="">Select unit…</option>${unitOpts}</select>
           <div id="unit-preview" style="font-size:12px;color:var(--accent);font-weight:600;margin-top:4px;min-height:16px;"></div></div>
-        <div class="form-group"><label>Date</label><input type="date" id="f-date" value="${today()}" /></div>
-        <div class="form-group"><label>Vendor / Shop</label><input type="text" id="f-vendor" placeholder="e.g. Agora, Shwapno" /></div>
-        <div class="form-group"><label>Notes / Specs</label><input type="text" id="f-notes" placeholder="Brand, size, variant…" /></div>
+        <div class="form-group"><label>Vendor / Shop</label><input type="text" id="f-vendor" placeholder="e.g. Agora, Shwapno"/></div>
+        <div class="form-group"><label>Notes</label><input type="text" id="f-notes" placeholder="Optional…"/></div>
       </div>
-      <div class="form-footer"><button class="btn btn-primary" onclick="savePurchase()">Save Purchase</button></div>
+      <div class="form-footer"><button class="btn btn-primary" onclick="saveEntry()">Save Entry</button></div>
     </div>`;
 }
-function handleCatChange(val){const wrap=document.getElementById('new-cat-wrap');if(val==='__new__'){wrap.style.display='flex';document.getElementById('f-new-cat').focus();}else wrap.style.display='none';}
+function handleCatChange(val){const w=document.getElementById('new-cat-wrap');if(val==='__new__'){w.style.display='flex';document.getElementById('f-new-cat').focus();}else w.style.display='none';}
 async function saveInlineCat(){
   const name=document.getElementById('f-new-cat').value.trim();if(!name)return;
   const{data,error}=await sb.from('categories').insert({name,context:currentContext}).select().single();
-  if(error){showToast('Error adding category');return;}
+  if(error){showToast('Error');return;}
   await loadCategories();showToast(`✓ "${name}" added`);
   const sel=document.getElementById('f-cat');const opt=document.createElement('option');opt.value=data.id;opt.textContent=name;
   sel.insertBefore(opt,sel.querySelector('option[value="__new__"]'));sel.value=data.id;
@@ -569,417 +462,203 @@ async function fetchItemSuggestions(q){
   const{data}=await sb.from('items').select('name').in('category_id',catIds).ilike('name',`%${q}%`).limit(8);
   const dl=document.getElementById('item-suggestions');if(dl)dl.innerHTML=(data||[]).map(i=>`<option value="${i.name}">`).join('');
 }
-async function savePurchase(){
+async function saveEntry(){
   const itemName=document.getElementById('f-item').value.trim();
   const catId=document.getElementById('f-cat').value;
+  const medId=document.getElementById('f-med').value;
   const price=parseFloat(document.getElementById('f-price').value);
   const qty=parseFloat(document.getElementById('f-qty').value)||1;
   const unit=document.getElementById('f-unit').value;
-  const date=document.getElementById('f-date').value;
   const vendor=document.getElementById('f-vendor').value.trim();
   const notes=document.getElementById('f-notes').value.trim();
   if(!itemName){showToast('Please enter an item name');return;}
   if(!catId||catId==='__new__'){showToast('Please select a category');return;}
-  if(!price||price<=0){showToast('Please enter a valid price');return;}
+  if(!price||price<=0){showToast('Please enter a valid amount');return;}
+  if(!medId){showToast('Please select a payment medium');return;}
+  // Save to purchases (item tracker)
   let{data:existing}=await sb.from('items').select('id').eq('name',itemName).eq('category_id',catId).limit(1);
   let itemId;
   if(existing?.length){itemId=existing[0].id;}
-  else{const{data:newItem}=await sb.from('items').insert({name:itemName,category_id:catId}).select().single();itemId=newItem.id;}
-  const{error}=await sb.from('purchases').insert({item_id:itemId,price,quantity:qty,unit:unit||null,purchased_at:date,vendor:vendor||null,notes:notes||null});
-  if(error){showToast('Error saving. Try again.');return;}
-  showToast('✓ Purchase saved!');renderAdd();
+  else{const{data:ni}=await sb.from('items').insert({name:itemName,category_id:catId}).select().single();itemId=ni.id;}
+  await sb.from('purchases').insert({item_id:itemId,price,quantity:qty,unit:unit||null,purchased_at:today(),vendor:vendor||null,notes:notes||null});
+  // Save to expense_entries
+  await sb.from('expense_entries').insert({item_name:itemName,category_id:catId,amount:price,quantity:qty,unit:unit||null,medium_id:medId,note:notes||null});
+  showToast('✓ Entry saved!');renderAdd();
 }
 
-// ── SUMMARY ──────────────────────────────────────────────
-async function renderSummary(){
-  const el=document.getElementById('main');el.innerHTML=`<div class="loading">Loading summary…</div>`;
-  const months=getMonths();const catIds=categories.map(c=>c.id);
-  let monthFilter=months.map(m=>`<div class="month-chip ${m.value===selectedMonth?'active':''}" onclick="selectMonth('${m.value}')">${m.label}</div>`).join('');
-  if(!catIds.length){el.innerHTML=`<div class="month-filter">${monthFilter}</div><div class="empty"><div class="empty-icon">📊</div><p>No data yet.</p></div>`;return;}
-  const start=selectedMonth+'-01';
-  const end=new Date(new Date(start).getFullYear(),new Date(start).getMonth()+1,0).toISOString().split('T')[0];
-  const{data:items}=await sb.from('items').select('id,name,category_id').in('category_id',catIds);
-  if(!items?.length){el.innerHTML=`<div class="month-filter">${monthFilter}</div><div class="empty"><div class="empty-icon">📊</div><p>No data yet.</p></div>`;return;}
-  const itemIds=items.map(i=>i.id);
+// ── ITEM TRACKER ──────────────────────────────────────────
+async function renderTracker(){
+  const el=document.getElementById('main');
+  el.innerHTML=`<div class="loading">Loading…</div>`;
+  // Load from expense_entries — grouped by item_name
+  const{data:entries}=await sb.from('expense_entries').select('*').order('entered_at',{ascending:false});
+  if(!entries?.length){el.innerHTML=`<div class="empty"><div class="empty-icon">📦</div><p>No entries yet. Start logging purchases in Add tab.</p></div>`;return;}
+  // Group by item_name
+  const itemMap={};
+  (entries||[]).forEach(e=>{
+    if(!itemMap[e.item_name]){itemMap[e.item_name]={entries:[],latestDate:e.entered_at,category_id:e.category_id};}
+    itemMap[e.item_name].entries.push(e);
+  });
   const catMap=Object.fromEntries(categories.map(c=>[c.id,c.name]));
-  const itemCatMap=Object.fromEntries(items.map(i=>[i.id,i.category_id]));
-  const itemNameMap=Object.fromEntries(items.map(i=>[i.id,i.name]));
-  const{data:purchases}=await sb.from('purchases').select('*').in('item_id',itemIds).gte('purchased_at',start).lte('purchased_at',end);
-  const{data:allPurchases}=await sb.from('purchases').select('item_id,price,purchased_at').in('item_id',itemIds).order('purchased_at',{ascending:false});
-  const catSpend={},itemSpend={};let total=0;
-  (purchases||[]).forEach(p=>{const catId=itemCatMap[p.item_id];const amt=p.price*(p.quantity||1);catSpend[catId]=(catSpend[catId]||0)+amt;itemSpend[p.item_id]=(itemSpend[p.item_id]||0)+amt;total+=amt;});
-  const maxSpend=Math.max(...Object.values(catSpend),1);
-  const itemHistory={};
-  (allPurchases||[]).forEach(p=>{if(!itemHistory[p.item_id])itemHistory[p.item_id]=[];itemHistory[p.item_id].push(p);});
-  let alerts=[];
-  Object.keys(itemHistory).forEach(iid=>{const hist=itemHistory[iid];if(hist.length>=2){const diff=((hist[0].price-hist[1].price)/hist[1].price)*100;if(diff>=10)alerts.push({name:itemNameMap[iid],pct:Math.round(diff),prev:hist[1].price,curr:hist[0].price});}});
-  const topItems=Object.entries(itemSpend).sort((a,b)=>b[1]-a[1]).slice(0,5);
-  let html=`<div class="month-filter">${monthFilter}</div>`;
-  html+=`<div class="summary-grid"><div class="stat-card"><div class="stat-label">Total Spent</div><div class="stat-value">${fmt(total)}</div><div class="stat-sub">${months.find(m=>m.value===selectedMonth)?.label}</div></div><div class="stat-card"><div class="stat-label">Purchases</div><div class="stat-value">${(purchases||[]).length}</div><div class="stat-sub">this month</div></div></div>`;
-  if(Object.keys(catSpend).length){
-    html+=`<div class="card"><div class="card-title">By Category</div>`;
-    Object.entries(catSpend).sort((a,b)=>b[1]-a[1]).forEach(([catId,amt])=>{html+=`<div class="cat-row"><div class="cat-name">${catMap[catId]||'Unknown'}</div><div class="cat-bar-wrap"><div class="cat-bar" style="width:${Math.round((amt/maxSpend)*100)}%"></div></div><div class="cat-amt">${fmt(amt)}</div></div>`;});
-    html+=`</div>`;
-  }
-  if(topItems.length){
-    html+=`<div class="card"><div class="card-title">🏆 Top Items This Month</div>`;
-    topItems.forEach(([iid,amt])=>{html+=`<div class="top-item-row"><div><div class="ti-name">${itemNameMap[iid]||'Unknown'}</div><div class="ti-meta">${catMap[itemCatMap[iid]]||''}</div></div><div class="ti-price">${fmt(amt)}</div></div>`;});
-    html+=`</div>`;
-  }
-  if(alerts.length){
-    html+=`<div class="card"><div class="card-title">⚠️ Price Alerts</div>`;
-    alerts.forEach(a=>{html+=`<div class="alert warn"><div class="alert-icon">📈</div><div class="alert-text"><strong>${a.name}</strong> is up ${a.pct}% — was ${fmt(a.prev)}, now ${fmt(a.curr)}</div></div>`;});
-    html+=`</div>`;
-  }
-  if(!Object.keys(catSpend).length)html+=`<div class="empty"><div class="empty-icon">📭</div><p>No purchases this month.</p></div>`;
+  const medMap=Object.fromEntries(expMediums.map(m=>[m.id,m.name]));
+  // Search
+  const searchEl=`<div class="search-wrap" style="margin-bottom:12px;">
+    <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" id="tracker-search" placeholder="Search items…" oninput="filterTracker(this.value)" autocomplete="off"/>
+  </div>`;
+  let html=searchEl+`<div id="tracker-list">`;
+  Object.entries(itemMap).forEach(([name,data])=>{
+    const latest=data.entries[0];
+    const uObj=calcUnitPrice(latest.amount,latest.quantity,latest.unit);
+    const stdRate=uObj&&uObj.standardRate?`${uObj.standardRate} / ${uObj.standardUnit}`:'';
+    const qtyLabel=latest.quantity&&latest.unit?`${latest.quantity} ${latest.unit}`:'';
+    html+=`<div class="card" style="padding:12px 16px;cursor:pointer;margin-bottom:8px;" onclick="showTrackerDetail('${esc(name)}')">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+        <div><div style="font-weight:600;font-size:14px;">${name}</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">${catMap[data.category_id]||''}</div>
+          ${qtyLabel?`<div style="font-size:12px;color:var(--text-muted);margin-top:1px;">Bought: ${qtyLabel}</div>`:''}
+        </div>
+        <div style="text-align:right;flex-shrink:0;">
+          <div style="font-weight:700;font-size:16px;color:var(--exp);">${fmt(latest.amount)}</div>
+          ${stdRate?`<div style="font-size:11px;color:var(--exp);font-weight:600;margin-top:1px;">${stdRate}</div>`:''}
+          <div style="font-size:11px;color:var(--text-muted);margin-top:1px;">${fmtDateShort(latest.entered_at)}</div>
+        </div>
+      </div></div>`;
+  });
+  html+=`</div>`;
   el.innerHTML=html;
 }
-function selectMonth(m){selectedMonth=m;renderSummary();}
-
-// ── UTILITY ──────────────────────────────────────────────
-async function renderUtility(){
-  const el=document.getElementById('main');el.innerHTML=`<div class="loading">Loading…</div>`;
-  const typeLabel=currentUtilType==='electricity'?'Electricity':'Gas';
-  const dbType=currentUtilType==='electricity'?'electricity':'gas';
-  const{data:readings}=await sb.from('utility_readings').select('*').eq('type',dbType).order('reading_date',{ascending:true});
-  const filled=fillGaps(readings||[]);
-  const now=new Date();
-  const ym=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
-  const prevMonthYm=(()=>{const d=new Date(now.getFullYear(),now.getMonth()-1,1);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;})();
-  const monthReadings=filled.filter(r=>r.reading_date.startsWith(ym));
-  const prevMonthReadings=filled.filter(r=>r.reading_date.startsWith(prevMonthYm));
-
-  // Recharge-aware consumption: on a recharge day, subtract recharge amount before computing drop
-  function consumptionFromReadings(rs){
-    const sorted=rs.slice().sort((a,b)=>a.reading_date.localeCompare(b.reading_date));
-    const days=[];
-    for(let i=1;i<sorted.length;i++){
-      // effective previous balance = prev balance (recharge already added to curr balance)
-      // if today is recharge day: consumed = (prev_balance + recharge_amount) - curr_balance
-      const rechargeAdj=sorted[i].is_recharge?(sorted[i].recharge_amount||0):0;
-      const consumed=(sorted[i-1].balance+rechargeAdj)-sorted[i].balance;
-      if(consumed>0)days.push({date:sorted[i].reading_date,consumed});
-    }
-    return days;
-  }
-
-  const currentDays=consumptionFromReadings(monthReadings);
-  const prevDays=consumptionFromReadings(prevMonthReadings);
-  const avgDaily=currentDays.length?currentDays.reduce((s,d)=>s+d.consumed,0)/currentDays.length:0;
-  const prevAvgDaily=prevDays.length?prevDays.reduce((s,d)=>s+d.consumed,0)/prevDays.length:0;
-  const latestReading=(readings||[]).length?readings[readings.length-1]:null;
-  const currentBalance=latestReading?latestReading.balance:null;
-  const totalDays=daysInMonth(ym);const daysLeft=totalDays-now.getDate();
-
-  // Total recharged this month
-  const totalRechargedThisMonth=(readings||[])
-    .filter(r=>r.reading_date.startsWith(ym)&&r.is_recharge&&r.recharge_amount>0)
-    .reduce((s,r)=>s+(r.recharge_amount||0),0);
-
-  let costInfo='',alertHtml='';
-  if(currentUtilType==='electricity'){
-    const estimatedBill=avgDaily*totalDays+ELEC_DEMAND_CHARGE;
-    const recommendedRecharge=(avgDaily*daysLeft+ELEC_DEMAND_CHARGE)*1.15;
-    costInfo=`<div class="util-grid">
-      <div class="util-stat"><div class="util-stat-label">Avg/Day</div><div class="util-stat-value">${fmt(Math.round(avgDaily))}</div><div class="util-stat-sub">consumed</div></div>
-      <div class="util-stat"><div class="util-stat-label">Demand Charge</div><div class="util-stat-value">${fmt(ELEC_DEMAND_CHARGE)}</div><div class="util-stat-sub">fixed</div></div>
-      <div class="util-stat"><div class="util-stat-label">Est. Month Total</div><div class="util-stat-value">${fmt(Math.round(estimatedBill))}</div><div class="util-stat-sub">usage + demand</div></div>
-      <div class="util-stat"><div class="util-stat-label">Recharged</div><div class="util-stat-value">${fmt(totalRechargedThisMonth)}</div><div class="util-stat-sub">this month</div></div>
-    </div>`;
-    if(currentBalance!==null){
-      const daysUntilAlert=avgDaily>0?Math.floor((currentBalance-ELEC_ALERT_THRESHOLD)/avgDaily):null;
-      const rechargeDate=daysUntilAlert!==null?new Date(Date.now()+daysUntilAlert*86400000).toLocaleDateString('en-BD',{day:'numeric',month:'short'}):'—';
-      if(currentBalance<ELEC_ALERT_THRESHOLD)alertHtml+=`<div class="alert danger"><div class="alert-icon">🚨</div><div class="alert-text"><strong>Recharge now!</strong> Balance ৳${currentBalance} is below ৳${ELEC_ALERT_THRESHOLD}. Top up: <strong>${fmt(Math.round(recommendedRecharge))}</strong></div></div>`;
-      else alertHtml+=`<div class="alert info"><div class="alert-icon">📅</div><div class="alert-text">Balance hits ৳${ELEC_ALERT_THRESHOLD} in ~<strong>${daysUntilAlert} days</strong> (${rechargeDate}). Recharge: <strong>${fmt(Math.round(recommendedRecharge))}</strong></div></div>`;
-    }
-    if(prevAvgDaily>0){const diff=((avgDaily-prevAvgDaily)/prevAvgDaily)*100;const cls=diff>0?'danger':'info';alertHtml+=`<div class="alert ${cls}"><div class="alert-icon">${diff>0?'📈':'📉'}</div><div class="alert-text"><strong>Using ${Math.abs(Math.round(diff))}% ${diff>0?'more':'less'} per day than last month.</strong> Last month avg: ${fmt(Math.round(prevAvgDaily))}/day.</div></div>`;}
-  } else {
-    const projectedM3=avgDaily*totalDays;
-    const estimatedBill=projectedM3*GAS_RATE+GAS_METER_CHARGE;
-    const recommendedRechargeM3=avgDaily*daysLeft*1.15;
-    const recommendedRechargeTaka=recommendedRechargeM3*GAS_RATE+GAS_METER_CHARGE;
-    costInfo=`<div class="util-grid">
-      <div class="util-stat"><div class="util-stat-label">Avg/Day</div><div class="util-stat-value">${avgDaily.toFixed(2)}</div><div class="util-stat-sub">m³</div></div>
-      <div class="util-stat"><div class="util-stat-label">Meter Charge</div><div class="util-stat-value">${fmt(GAS_METER_CHARGE)}</div><div class="util-stat-sub">fixed</div></div>
-      <div class="util-stat"><div class="util-stat-label">Est. Month Bill</div><div class="util-stat-value">${fmt(Math.round(estimatedBill))}</div><div class="util-stat-sub">usage + meter</div></div>
-      <div class="util-stat"><div class="util-stat-label">Recharged</div><div class="util-stat-value">${totalRechargedThisMonth.toFixed(1)} m³</div><div class="util-stat-sub">this month</div></div>
-    </div>`;
-    if(currentBalance!==null){
-      const daysUntilEmpty=avgDaily>0?Math.floor(currentBalance/avgDaily):null;
-      if(currentBalance<avgDaily*3)alertHtml+=`<div class="alert danger"><div class="alert-icon">🚨</div><div class="alert-text"><strong>Recharge now!</strong> Less than 3 days of gas. Top up <strong>${recommendedRechargeM3.toFixed(1)} m³</strong> (~${fmt(Math.round(recommendedRechargeTaka))})</div></div>`;
-      else{const rechargeDate=avgDaily>0?new Date(Date.now()+(daysUntilEmpty-3)*86400000).toLocaleDateString('en-BD',{day:'numeric',month:'short'}):'—';alertHtml+=`<div class="alert info"><div class="alert-icon">📅</div><div class="alert-text">Gas lasts ~<strong>${daysUntilEmpty} days</strong>. Recharge by <strong>${rechargeDate}</strong>: <strong>${recommendedRechargeM3.toFixed(1)} m³</strong> (~${fmt(Math.round(recommendedRechargeTaka))})</div></div>`;}
-    }
-    if(prevAvgDaily>0){const diff=((avgDaily-prevAvgDaily)/prevAvgDaily)*100;const cls=diff>0?'danger':'info';alertHtml+=`<div class="alert ${cls}"><div class="alert-icon">${diff>0?'📈':'📉'}</div><div class="alert-text"><strong>Using ${Math.abs(Math.round(diff))}% ${diff>0?'more':'less'} per day than last month.</strong> Last month avg: ${prevAvgDaily.toFixed(2)} m³/day.</div></div>`;}
-  }
-
-  // Build recent readings table (newest first, recharge-aware consumption)
-  const recentRaw=(readings||[]).slice(-14).reverse();
-  const recentFilled=filled.slice(-14).reverse();
-  const unit=currentUtilType==='electricity'?'৳':'m³';
-  const isGas=currentUtilType==='gas';
-  let readingsHtml='';
-  recentFilled.forEach((r,i)=>{
-    const older=recentFilled[i+1];
-    // consumed = (older_balance + recharge_if_today) - current_balance
-    const rechargeAdj=r.is_recharge?(r.recharge_amount||0):0;
-    const consumed=older?Math.max(0,(older.balance+rechargeAdj)-r.balance):null;
-    const highConsume=consumed&&avgDaily>0&&consumed>avgDaily*1.5;
-    const rechargeBadge=r.is_recharge&&r.recharge_amount>0?`<span style="font-size:10px;background:var(--gas-light);color:var(--gas);border-radius:10px;padding:1px 6px;font-weight:600;margin-left:4px;">+${isGas?r.recharge_amount.toFixed(2):fmt(r.recharge_amount)}</span>`:'';
-    readingsHtml+=`<div class="reading-row">
-      <div class="rr-date">${fmtDateShort(r.reading_date)}${r.interpolated?'<br><span class="rr-interp">~est.</span>':''}${rechargeBadge}</div>
-      <div class="rr-balance">${r.balance.toFixed(isGas?2:0)} ${unit}</div>
-      <div class="rr-consumed ${highConsume?'high':''}">${consumed!==null?'−'+(isGas?consumed.toFixed(2):Math.round(consumed))+' '+unit:'—'}</div>
-    </div>`;
+function filterTracker(q){
+  const rows=document.querySelectorAll('#tracker-list .card');
+  rows.forEach(r=>{const name=r.querySelector('div[style*="font-weight:600"]')?.textContent||'';r.style.display=name.toLowerCase().includes(q.toLowerCase())?'':'none';});
+}
+async function showTrackerDetail(itemName){
+  const el=document.getElementById('main');
+  el.innerHTML=`<button class="back-btn" onclick="setPage('tracker')">← Back</button><div class="loading">Loading…</div>`;
+  const{data:entries}=await sb.from('expense_entries').select('*').ilike('item_name',itemName).order('entered_at',{ascending:false});
+  if(!entries?.length){el.innerHTML=`<button class="back-btn" onclick="setPage('tracker')">← Back</button><div class="empty"><p>No entries found.</p></div>`;return;}
+  const medMap=Object.fromEntries(expMediums.map(m=>[m.id,m.name]));
+  const latest=entries[0];const uObj=calcUnitPrice(latest.amount,latest.quantity,latest.unit);
+  const stdRate=uObj&&uObj.standardRate?`${uObj.standardRate} / ${uObj.standardUnit}`:null;
+  const qtyLabel=latest.quantity&&latest.unit?`${latest.quantity} ${latest.unit}`:'';
+  let html=`<button class="back-btn" onclick="setPage('tracker')">← Back</button>
+    <div class="item-detail"><div class="item-detail-header">
+      <div class="item-name-big">${itemName}</div>
+      <div class="item-price-row">
+        <div><div class="price-label">Last bought${qtyLabel?' · '+qtyLabel:''}</div>
+          <div class="latest-price">${fmt(latest.amount)}</div>
+          <div class="price-label">${fmtDate(latest.entered_at)}</div></div>
+        ${stdRate?`<div class="unit-price-pill">📦 ${stdRate}</div>`:''}
+      </div></div><div>`;
+  entries.forEach((e,i)=>{
+    const prev=entries[i+1];let badge='';
+    if(prev){const diff=((e.amount-prev.amount)/prev.amount)*100;if(diff>5)badge=`<span class="h-badge up">↑${Math.round(diff)}%</span>`;else if(diff<-5)badge=`<span class="h-badge down">↓${Math.abs(Math.round(diff))}%</span>`;else badge=`<span class="h-badge same">≈same</span>`;}
+    const uObjE=calcUnitPrice(e.amount,e.quantity,e.unit);
+    const qL=e.quantity&&e.unit?`${e.quantity} ${e.unit}`:'';
+    const sR=uObjE&&uObjE.standardRate?`${uObjE.standardRate} / ${uObjE.standardUnit}`:null;
+    html+=`<div class="history-row"><div class="h-date">${fmtDate(e.entered_at)}</div>
+      <div class="h-main"><div class="h-price">${fmt(e.amount)}${qL?` <span style="font-size:12px;font-weight:400;color:var(--text-muted);">for ${qL}</span>`:''}</div>
+        ${sR?`<div class="h-unit-price">≈ ${sR}</div>`:''}
+        <div class="h-meta">${medMap[e.medium_id]||''}${e.note?' · '+e.note:''}</div>
+      </div>${badge}</div>`;
   });
+  el.innerHTML=html+'</div></div>';
+}
 
-  const typeColor=currentUtilType==='electricity'?'elec':'gas';
-  const heroIcon=currentUtilType==='electricity'?'⚡':'🔥';
-  el.innerHTML=`
-    <div class="util-toggle">
-      <button class="util-btn elec ${currentUtilType==='electricity'?'active':''}" onclick="switchUtilType('electricity')">⚡ Electricity</button>
-      <button class="util-btn gas ${currentUtilType==='gas'?'active':''}" onclick="switchUtilType('gas')">🔥 Gas</button>
-    </div>
-    ${currentBalance!==null?`<div class="util-hero ${typeColor}"><div class="util-hero-label">Current Balance</div><div class="util-hero-value ${typeColor}">${currentBalance.toFixed(isGas?2:0)} ${unit}</div><div class="util-hero-sub">as of ${latestReading?fmtDate(latestReading.reading_date):'—'}</div></div>`:`<div class="alert info"><div class="alert-icon">💡</div><div class="alert-text">No readings yet. Log your first ${typeLabel} reading below.</div></div>`}
-    ${alertHtml}${costInfo}
-    <div class="form-sheet" style="margin-bottom:12px;">
-      <div class="form-header">
-        <div class="card-title" style="margin-bottom:0;">${heroIcon} Log Reading</div>
-        <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Auto-logging for today: ${fmtDate(today())}</div>
-      </div>
-      <div class="form-body">
-        <div class="form-group"><label>Balance (${unit})</label><input type="number" id="u-balance" placeholder="0" min="0" step="${isGas?'0.01':'1'}" inputmode="decimal" /></div>
-        <div class="form-group">
-          <label>Recharge Day?</label>
-          <div onclick="toggleRechargeToggle()" id="recharge-toggle-wrap" style="display:flex;align-items:center;gap:10px;padding:11px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;background:var(--surface);transition:border 0.15s;">
-            <div id="recharge-toggle-box" style="width:20px;height:20px;border-radius:6px;border:2px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;transition:all 0.15s;flex-shrink:0;"></div>
-            <span id="recharge-toggle-label" style="font-size:14px;font-weight:500;color:var(--text-muted);">Not a recharge day</span>
-            <input type="checkbox" id="u-is-recharge" style="display:none;" />
-          </div>
-        </div>
-        <div class="form-group" id="recharge-field" style="display:none;">
-          <label>Recharge Amount (${unit})</label>
-          <input type="number" id="u-recharge-amount" placeholder="0" min="0" step="${isGas?'0.01':'1'}" inputmode="decimal" />
-        </div>
-        <div class="form-group"><label>Notes (optional)</label><input type="text" id="u-notes" placeholder="e.g. recharged via bKash" /></div>
-      </div>
-      <div class="form-footer"><button class="btn btn-primary" onclick="saveReading()">Save Reading</button></div>
-    </div>
-    ${recentFilled.length?`<div class="card"><div class="card-title">Recent Readings</div><div style="margin:-4px -4px;"><div class="reading-row" style="padding:8px 16px;"><div class="rr-date" style="font-weight:600;font-size:11px;text-transform:uppercase;">Date</div><div class="rr-balance" style="font-weight:600;font-size:11px;text-transform:uppercase;">Balance</div><div class="rr-consumed" style="font-weight:600;font-size:11px;text-transform:uppercase;">Used</div></div>${readingsHtml}</div></div>`:''}`;
+// ── EXPENSES ──────────────────────────────────────────────
+async function renderExpenses(){
+  const el=document.getElementById('main');
+  el.innerHTML=`<div class="sub-nav">
+    <button class="sub-btn ${expSubPage==='summary'?'active':''}" onclick="setExpSub('summary')">💳 By Medium</button>
+    <button class="sub-btn ${expSubPage==='list'?'active':''}" onclick="setExpSub('list')">📋 All Entries</button>
+    <button class="sub-btn ${expSubPage==='category'?'active':''}" onclick="setExpSub('category')">📊 By Category</button>
+  </div>
+  <div id="exp-content"><div class="loading">Loading…</div></div>`;
+  await loadExpMediums();
+  renderExpContent();
 }
-function fillGaps(readings){
-  if(!readings.length)return[];const result=[];
-  for(let i=0;i<readings.length;i++){
-    result.push({...readings[i],interpolated:false});
-    if(i<readings.length-1){
-      const curr=new Date(readings[i].reading_date),next=new Date(readings[i+1].reading_date);
-      const days=Math.round((next-curr)/86400000);
-      // For gap filling, account for recharge on the next real reading
-      const nextRecharge=readings[i+1].is_recharge?(readings[i+1].recharge_amount||0):0;
-      if(days>1){
-        const effectivePrev=readings[i].balance;
-        const effectiveNext=readings[i+1].balance-nextRecharge; // remove recharge to get true drop
-        const drop=(effectivePrev-effectiveNext)/days;
-        for(let d=1;d<days;d++){
-          const dt=new Date(curr.getTime()+d*86400000);
-          result.push({id:'interp-'+dt.toISOString().split('T')[0],type:readings[i].type,reading_date:dt.toISOString().split('T')[0],balance:parseFloat(Math.max(0,readings[i].balance-drop*d).toFixed(2)),interpolated:true,is_recharge:false,recharge_amount:0});
-        }
-      }
-    }
-  }
-  return result.sort((a,b)=>a.reading_date.localeCompare(b.reading_date));
+function setExpSub(p){expSubPage=p;renderExpenses();}
+async function renderExpContent(){
+  const el=document.getElementById('exp-content');
+  if(expSubPage==='summary') await renderExpSummary(el);
+  else if(expSubPage==='list') await renderExpList(el);
+  else if(expSubPage==='category') await renderExpCategory(el);
 }
-function toggleRechargeToggle(){
-  const cb=document.getElementById('u-is-recharge');
-  cb.checked=!cb.checked;
-  const checked=cb.checked;
-  const box=document.getElementById('recharge-toggle-box');
-  const label=document.getElementById('recharge-toggle-label');
-  const wrap=document.getElementById('recharge-toggle-wrap');
-  if(checked){
-    box.style.background='var(--accent)';
-    box.style.borderColor='var(--accent)';
-    box.innerHTML='<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-    label.textContent='Recharged Day';
-    label.style.color='var(--accent)';
-    label.style.fontWeight='600';
-    wrap.style.borderColor='var(--accent)';
-    wrap.style.background='var(--accent-light)';
+
+async function renderExpSummary(el){
+  // Get last adjustment time
+  const{data:adjs}=await sb.from('account_adjustments').select('*').order('adjusted_at',{ascending:false}).limit(1);
+  const lastAdj=adjs&&adjs.length?adjs[0]:null;
+  const since=lastAdj?lastAdj.adjusted_at:null;
+  // Get all entries since last adjustment
+  let query=sb.from('expense_entries').select('*');
+  if(since)query=query.gte('entered_at',since);
+  const{data:entries}=await query.order('entered_at',{ascending:false});
+  const medMap=Object.fromEntries(expMediums.map(m=>[m.id,m.name]));
+  const total=(entries||[]).reduce((s,e)=>s+e.amount,0);
+  const byMed={};
+  (entries||[]).forEach(e=>{const k=e.medium_id||'__none__';byMed[k]=(byMed[k]||{total:0,count:0});byMed[k].total+=e.amount;byMed[k].count++;});
+  const sinceLabel=since?`since ${fmtDate(since)}`:'all time';
+  let html=`
+    <div class="exp-hero">
+      <div class="exp-hero-label">Total Spent</div>
+      <div class="exp-hero-value">${fmt(total)}</div>
+      <div class="exp-hero-sub">${sinceLabel} · ${(entries||[]).length} entries</div>
+    </div>
+    ${lastAdj?`<div class="adj-badge"><span style="font-size:16px;">✅</span><div class="adj-badge-text">Last adjusted: ${fmtDate(lastAdj.adjusted_at)}${lastAdj.note?' — '+lastAdj.note:''}</div></div>`:''}`;
+  if(expMediums.length){
+    expMediums.forEach(m=>{
+      const d=byMed[m.id]||{total:0,count:0};
+      html+=`<div class="medium-card">
+        <div><div class="medium-name">${m.name}</div><div class="medium-meta">${d.count} transactions</div></div>
+        <div><div class="medium-amount">${fmt(d.total)}</div><div class="medium-count">${sinceLabel}</div></div>
+      </div>`;
+    });
   } else {
-    box.style.background='var(--surface)';
-    box.style.borderColor='var(--border)';
-    box.innerHTML='';
-    label.textContent='Not a recharge day';
-    label.style.color='var(--text-muted)';
-    label.style.fontWeight='500';
-    wrap.style.borderColor='var(--border)';
-    wrap.style.background='var(--surface)';
+    html+=`<div class="empty"><div class="empty-icon">💳</div><p>No payment mediums yet. Add them in ⚙️ Manage.</p></div>`;
   }
-  document.getElementById('recharge-field').style.display=checked?'flex':'none';
-}
-function switchUtilType(t){currentUtilType=t;renderUtility();}
-async function saveReading(){
-  const date=today();
-  const balance=parseFloat(document.getElementById('u-balance').value);
-  const notes=document.getElementById('u-notes').value.trim();
-  const isRecharge=document.getElementById('u-is-recharge')?.checked||false;
-  const rechargeAmount=isRecharge?parseFloat(document.getElementById('u-recharge-amount')?.value||0):0;
-  if(isNaN(balance)||balance<0){showToast('Please enter a valid balance');return;}
-  if(isRecharge&&(!rechargeAmount||rechargeAmount<=0)){showToast('Please enter the recharge amount');return;}
-  const{error}=await sb.from('utility_readings').upsert({
-    type:currentUtilType==='electricity'?'electricity':'gas',
-    reading_date:date,balance,notes:notes||null,
-    is_recharge:isRecharge,recharge_amount:isRecharge?rechargeAmount:0
-  },{onConflict:'type,reading_date'});
-  if(error){showToast('Error saving reading');return;}
-  showToast('✓ Reading saved!');renderUtility();
+  html+=`<button class="adjust-btn" onclick="markAccountsAdjusted()">✅ Accounts Adjusted</button>`;
+  el.innerHTML=html;
 }
 
-// ── MANAGE ───────────────────────────────────────────────
-function renderManage(){
-  let catHtml=categories.length?categories.map(c=>`<span class="cat-tag">${c.name} <button class="cat-tag-del" onclick="deleteCategory('${c.id}','${esc(c.name)}')">×</button></span>`).join(''):`<span style="font-size:13px;color:var(--text-muted);">No categories yet.</span>`;
-  document.getElementById('main').innerHTML=`
-    <div class="card"><div class="card-title">Categories — ${currentContext}</div>
-      <div style="margin-bottom:14px;">${catHtml}</div>
-      <div style="display:flex;gap:8px;"><input type="text" id="new-cat" placeholder="New category name…" style="flex:1;" /><button class="btn btn-primary btn-sm" onclick="addCategory()">Add</button></div>
-    </div>
-    <div class="card"><div style="font-size:13px;color:var(--text-muted);">Switch between <strong>Home</strong> and <strong>Office</strong> above to manage each context's categories.</div></div>`;
-}
-async function addCategory(){
-  const name=document.getElementById('new-cat').value.trim();if(!name)return;
-  const{error}=await sb.from('categories').insert({name,context:currentContext});
-  if(error){showToast('Error adding category');return;}
-  showToast(`✓ "${name}" added`);await loadCategories();renderManage();
-}
-async function deleteCategory(id,name){
-  if(!confirm(`Delete category "${name}"?`))return;
-  await sb.from('categories').delete().eq('id',id);
-  showToast(`Deleted "${name}"`);await loadCategories();renderManage();
+async function markAccountsAdjusted(){
+  const note=prompt('Optional note for this adjustment (e.g. "Checked Wealth app"):') || null;
+  const{error}=await sb.from('account_adjustments').insert({note});
+  if(error){showToast('Error saving adjustment');return;}
+  showToast('✓ Accounts marked as adjusted! Summary reset.');
+  await renderExpContent();
 }
 
-
-// ── XPENSE (separate Supabase) ───────────────────────────
-const XP_URL='https://knjibkbggkrgusuzorhu.supabase.co';
-const XP_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtuamlia2JnZ2tyZ3VzdXpvcmh1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1MjQ1OTgsImV4cCI6MjA5NzEwMDU5OH0.8QNYDVtgrar_gsmcDw4si6p237qvJ9ML9SpDA5egO00';
-const xp=supabase.createClient(XP_URL,XP_KEY);
-
-let xpPage='add'; // add | list | analytics | settings
-let xpCategories=[];let xpMediums=[];
-let xpSelectedMonth=new Date().toISOString().slice(0,7);
-
-async function loadXpData(){
-  const[{data:cats},{data:meds}]=await Promise.all([
-    xp.from('categories').select('*').order('name'),
-    xp.from('mediums').select('*').order('name')
-  ]);
-  xpCategories=cats||[];xpMediums=meds||[];
-}
-
-function renderExpenses(){
-  document.getElementById('main').innerHTML=`
-    <div class="xp-sub-nav">
-      <button class="xp-sub-btn ${xpPage==='add'?'active':''}" onclick="setXpPage('add')">➕ Add</button>
-      <button class="xp-sub-btn ${xpPage==='list'?'active':''}" onclick="setXpPage('list')">📋 List</button>
-      <button class="xp-sub-btn ${xpPage==='analytics'?'active':''}" onclick="setXpPage('analytics')">📊 Analytics</button>
-      <button class="xp-sub-btn ${xpPage==='settings'?'active':''}" onclick="setXpPage('settings')">⚙️ Settings</button>
-    </div>
-    <div id="xp-content"><div class="loading">Loading…</div></div>`;
-  renderXpContent();
-}
-function setXpPage(p){xpPage=p;renderExpenses();}
-
-async function renderXpContent(){
-  await loadXpData();
-  const el=document.getElementById('xp-content');
-  if(xpPage==='add') renderXpAdd(el);
-  else if(xpPage==='list') await renderXpList(el);
-  else if(xpPage==='analytics') await renderXpAnalytics(el);
-  else if(xpPage==='settings') renderXpSettings(el);
-}
-
-// ADD EXPENSE
-function renderXpAdd(el){
-  const catOpts=xpCategories.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
-  const medOpts=xpMediums.map(m=>`<option value="${m.id}">${m.name}</option>`).join('');
-  el.innerHTML=`
-    <div class="form-sheet">
-      <div class="form-header"><div class="card-title" style="margin-bottom:0;">New Expense</div></div>
-      <div class="form-body">
-        <div class="form-group"><label>Amount (৳)</label>
-          <input type="number" id="xp-amount" placeholder="0" min="0" inputmode="decimal" /></div>
-        <div class="form-row">
-          <div class="form-group"><label>Category</label>
-            <select id="xp-cat"><option value="">Select…</option>${catOpts}</select></div>
-          <div class="form-group"><label>Medium</label>
-            <select id="xp-med"><option value="">Select…</option>${medOpts}</select></div>
-        </div>
-        <div class="form-group"><label>Note (optional)</label>
-          <input type="text" id="xp-note" placeholder="Brief description…" /></div>
-      </div>
-      <div class="form-footer"><button class="btn btn-primary" style="background:#8B5CF6;" onclick="saveExpense()">+ Add Expense</button></div>
-    </div>
-    <div class="card" style="margin-top:4px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;">
-        <div><div style="font-weight:600;font-size:14px;">Balance reconciliation</div><div style="font-size:12px;color:var(--text-muted);margin-top:2px;">Tap after verifying your wealth tracker app</div></div>
-        <button class="btn btn-outline btn-sm" onclick="markBalanceChecked()">Balance checked</button>
-      </div>
-    </div>`;
-}
-
-async function saveExpense(){
-  const amount=parseFloat(document.getElementById('xp-amount').value);
-  const catId=document.getElementById('xp-cat').value;
-  const medId=document.getElementById('xp-med').value;
-  const note=document.getElementById('xp-note').value.trim();
-  if(!amount||amount<=0){showToast('Please enter an amount');return;}
-  if(!catId){showToast('Please select a category');return;}
-  if(!medId){showToast('Please select a medium');return;}
-  const{error}=await xp.from('expenses').insert({
-    amount,category_id:catId,medium_id:medId,note:note||null,created_at:new Date().toISOString()
-  });
-  if(error){showToast('Error saving expense: '+error.message);return;}
-  showToast('✓ Expense saved!');
-  document.getElementById('xp-amount').value='';
-  document.getElementById('xp-note').value='';
-}
-
-async function markBalanceChecked(){
-  // log a reconciliation event with today's date
-  await xp.from('expenses').insert({amount:0,category_id:null,medium_id:null,note:'__balance_checked__',date:today()}).select();
-  showToast('✓ Balance reconciliation logged');
-}
-
-// LIST
-async function renderXpList(el){
+async function renderExpList(el){
   el.innerHTML=`<div class="loading">Loading…</div>`;
   const months=getMonths();
-  let monthFilter=months.map(m=>`<div class="month-chip ${m.value===xpSelectedMonth?'active':''}" onclick="xpSelectMonth('${m.value}')">${m.label}</div>`).join('');
-  const start=xpSelectedMonth+'-01';
+  let monthFilter=months.map(m=>`<div class="month-chip ${m.value===selectedMonth?'active':''}" onclick="expSelectMonth('${m.value}')">${m.label}</div>`).join('');
+  const start=selectedMonth+'-01';
   const end=new Date(new Date(start).getFullYear(),new Date(start).getMonth()+1,0).toISOString().split('T')[0];
-  const{data:expenses}=await xp.from('expenses').select('*').gte('created_at',start).lte('created_at',end).neq('note','__balance_checked__').order('created_at',{ascending:false}).order('created_at',{ascending:false});
-  const catMap=Object.fromEntries(xpCategories.map(c=>[c.id,c.name]));
-  const medMap=Object.fromEntries(xpMediums.map(m=>[m.id,m.name]));
-  const total=(expenses||[]).reduce((s,e)=>s+e.amount,0);
+  const{data:entries}=await sb.from('expense_entries').select('*').gte('entered_at',start).lte('entered_at',end+'T23:59:59').order('entered_at',{ascending:false});
+  const medMap=Object.fromEntries(expMediums.map(m=>[m.id,m.name]));
+  const catMap=Object.fromEntries(categories.map(c=>[c.id,c.name]));
+  const total=(entries||[]).reduce((s,e)=>s+e.amount,0);
   let html=`<div class="month-filter">${monthFilter}</div>
-    <div class="xp-amount-hero">
-      <div class="xp-amount-month">${months.find(m=>m.value===xpSelectedMonth)?.label||''}</div>
-      <div class="xp-amount-val">${fmt(total)}</div>
-      <div style="font-size:12px;color:var(--text-muted);">${(expenses||[]).length} expenses</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <div><div style="font-family:'Sora',sans-serif;font-size:24px;font-weight:700;color:var(--exp);">${fmt(total)}</div>
+      <div style="font-size:12px;color:var(--text-muted);">${(entries||[]).length} entries · ${months.find(m=>m.value===selectedMonth)?.label}</div></div>
     </div>`;
-  if(!(expenses||[]).length){html+=`<div class="empty"><div class="empty-icon">💸</div><p>No expenses this month.</p></div>`;el.innerHTML=html;return;}
+  if(!(entries||[]).length){html+=`<div class="empty"><div class="empty-icon">💸</div><p>No expenses this month.</p></div>`;el.innerHTML=html;return;}
   html+=`<div class="card" style="padding:0;overflow:hidden;">`;
-  (expenses||[]).forEach(e=>{
-    html+=`<div class="xp-entry">
-      <div class="xp-entry-left">
-        <div class="xp-entry-cat">${catMap[e.category_id]||'—'}</div>
-        <div class="xp-entry-meta">${fmtDate((e.date||e.created_at||'').slice(0,10))}${e.note?` · ${e.note}`:''}</div>
+  (entries||[]).forEach(e=>{
+    html+=`<div class="exp-entry-row">
+      <div class="exp-entry-info">
+        <div class="exp-entry-name">${e.item_name}</div>
+        <div class="exp-entry-meta">${catMap[e.category_id]||''}${e.note?' · '+e.note:''} · ${fmtDateShort(e.entered_at)}</div>
       </div>
-      <div class="xp-entry-right">
-        <div class="xp-entry-amount">${fmt(e.amount)}</div>
-        <div class="xp-entry-medium">${medMap[e.medium_id]||'—'}</div>
+      <div class="exp-entry-right">
+        <div class="exp-entry-amount">${fmt(e.amount)}</div>
+        <div class="exp-entry-medium">${medMap[e.medium_id]||'—'}${e.quantity&&e.unit?' · '+e.quantity+' '+e.unit:''}</div>
       </div>
       <div style="display:flex;flex-direction:column;gap:4px;">
-        <button class="edit-btn" onclick="openEditExpense('${e.id}')">✏️</button>
-        <button class="delete-btn" onclick="deleteExpense('${e.id}')">🗑</button>
+        <button class="edit-btn" onclick="openEditExpEntry('${e.id}')">✏️</button>
+        <button class="delete-btn" onclick="deleteExpEntry('${e.id}')">🗑</button>
       </div>
     </div>`;
   });
@@ -987,147 +666,139 @@ async function renderXpList(el){
   el.innerHTML=html;
 }
 
-function xpSelectMonth(m){xpSelectedMonth=m;renderXpContent();}
+function expSelectMonth(m){selectedMonth=m;renderExpContent();}
 
-async function openEditExpense(id){
-  const{data:e}=await xp.from('expenses').select('*').eq('id',id).single();
-  if(!e)return;
-  const catOpts=xpCategories.map(c=>`<option value="${c.id}" ${c.id===e.category_id?'selected':''}>${c.name}</option>`).join('');
-  const medOpts=xpMediums.map(m=>`<option value="${m.id}" ${m.id===e.medium_id?'selected':''}>${m.name}</option>`).join('');
-  showModal(`<div class="modal">
-    <div class="modal-header"><div class="modal-title">Edit Expense</div><button class="modal-close" onclick="closeModal()">✕</button></div>
+async function openEditExpEntry(id){
+  const{data:e}=await sb.from('expense_entries').select('*').eq('id',id).single();if(!e)return;
+  const catOpts=categories.map(c=>`<option value="${c.id}" ${c.id===e.category_id?'selected':''}>${c.name}</option>`).join('');
+  const medOpts=expMediums.map(m=>`<option value="${m.id}" ${m.id===e.medium_id?'selected':''}>${m.name}</option>`).join('');
+  const unitOpts=UNITS.map(u=>`<option value="${u}" ${u===e.unit?'selected':''}>${u}</option>`).join('');
+  showModal(`<div class="modal"><div class="modal-header"><div class="modal-title">Edit Expense</div><button class="modal-close" onclick="closeModal()">✕</button></div>
     <div class="modal-body">
-      <div class="form-group"><label>Amount (৳)</label><input type="number" id="ee-amount" value="${e.amount}" inputmode="decimal" /></div>
+      <div class="form-group"><label>Item Name</label><input type="text" id="ee-name" value="${esc(e.item_name)}"/></div>
+      <div class="form-group"><label>Amount (৳)</label><input type="number" id="ee-amount" value="${e.amount}" inputmode="decimal"/></div>
+      <div class="form-row">
+        <div class="form-group"><label>Quantity</label><input type="number" id="ee-qty" value="${e.quantity||''}" step="any" inputmode="decimal"/></div>
+        <div class="form-group"><label>Unit</label><select id="ee-unit"><option value="">—</option>${unitOpts}</select></div>
+      </div>
       <div class="form-row">
         <div class="form-group"><label>Category</label><select id="ee-cat"><option value="">—</option>${catOpts}</select></div>
         <div class="form-group"><label>Medium</label><select id="ee-med"><option value="">—</option>${medOpts}</select></div>
       </div>
-      <div class="form-group"><label>Note</label><input type="text" id="ee-note" value="${e.note||''}" /></div>
+      <div class="form-group"><label>Note</label><input type="text" id="ee-note" value="${e.note||''}"/></div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-outline btn-sm" onclick="closeModal()">Cancel</button>
-      <button class="btn btn-primary btn-sm" style="flex:1;background:#8B5CF6;" onclick="saveEditExpense('${id}')">Save</button>
-    </div>
-  </div>`);
+    <div class="modal-footer"><button class="btn btn-outline btn-sm" onclick="closeModal()">Cancel</button>
+    <button class="btn btn-primary btn-sm" style="flex:1;background:var(--exp);" onclick="saveEditExpEntry('${id}')">Save</button></div></div>`);
 }
-
-async function saveEditExpense(id){
+async function saveEditExpEntry(id){
+  const name=document.getElementById('ee-name').value.trim();
   const amount=parseFloat(document.getElementById('ee-amount').value);
-  const catId=document.getElementById('ee-cat').value;
-  const medId=document.getElementById('ee-med').value;
-  const note=document.getElementById('ee-note').value.trim();
-  if(!amount||amount<=0){showToast('Enter a valid amount');return;}
-  const{error}=await xp.from('expenses').update({amount,category_id:catId||null,medium_id:medId||null,note:note||null}).eq('id',id);
+  const qty=parseFloat(document.getElementById('ee-qty').value)||null;
+  const unit=document.getElementById('ee-unit').value||null;
+  const catId=document.getElementById('ee-cat').value||null;
+  const medId=document.getElementById('ee-med').value||null;
+  const note=document.getElementById('ee-note').value.trim()||null;
+  if(!name||!amount||amount<=0){showToast('Enter valid name and amount');return;}
+  const{error}=await sb.from('expense_entries').update({item_name:name,amount,quantity:qty,unit,category_id:catId,medium_id:medId,note}).eq('id',id);
   if(error){showToast('Error saving');return;}
-  showToast('✓ Updated!');closeModal();await renderXpContent();
+  showToast('✓ Updated!');closeModal();await renderExpContent();
+}
+async function deleteExpEntry(id){
+  if(!confirm('Delete this expense entry?'))return;
+  await sb.from('expense_entries').delete().eq('id',id);
+  showToast('Deleted');await renderExpContent();
 }
 
-async function deleteExpense(id){
-  if(!confirm('Delete this expense?'))return;
-  await xp.from('expenses').delete().eq('id',id);
-  showToast('Deleted');await renderXpContent();
-}
-
-// ANALYTICS
-async function renderXpAnalytics(el){
+async function renderExpCategory(el){
   el.innerHTML=`<div class="loading">Loading…</div>`;
   const months=getMonths();
-  let monthFilter=months.map(m=>`<div class="month-chip ${m.value===xpSelectedMonth?'active':''}" onclick="xpSelectMonth('${m.value}')">${m.label}</div>`).join('');
-  const start=xpSelectedMonth+'-01';
+  let monthFilter=months.map(m=>`<div class="month-chip ${m.value===selectedMonth?'active':''}" onclick="expSelectMonth('${m.value}')">${m.label}</div>`).join('');
+  const start=selectedMonth+'-01';
   const end=new Date(new Date(start).getFullYear(),new Date(start).getMonth()+1,0).toISOString().split('T')[0];
-  const{data:expenses}=await xp.from('expenses').select('*').gte('created_at',start).lte('created_at',end).neq('note','__balance_checked__');
-  const catMap=Object.fromEntries(xpCategories.map(c=>[c.id,c.name]));
-  const medMap=Object.fromEntries(xpMediums.map(m=>[m.id,m.name]));
-  const total=(expenses||[]).reduce((s,e)=>s+e.amount,0);
-
-  // by category
+  const{data:entries}=await sb.from('expense_entries').select('*').gte('entered_at',start).lte('entered_at',end+'T23:59:59');
+  const catMap=Object.fromEntries(categories.map(c=>[c.id,c.name]));
+  const total=(entries||[]).reduce((s,e)=>s+e.amount,0);
   const byCat={};
-  (expenses||[]).forEach(e=>{const k=catMap[e.category_id]||'Other';byCat[k]=(byCat[k]||0)+e.amount;});
-  // by medium
-  const byMed={};
-  (expenses||[]).forEach(e=>{const k=medMap[e.medium_id]||'Other';byMed[k]=(byMed[k]||0)+e.amount;});
-
+  (entries||[]).forEach(e=>{const k=catMap[e.category_id]||'Other';byCat[k]=(byCat[k]||0)+e.amount;});
   const maxCat=Math.max(...Object.values(byCat),1);
-  const maxMed=Math.max(...Object.values(byMed),1);
+  let html=`<div class="month-filter">${monthFilter}</div>
+    <div style="font-family:'Sora',sans-serif;font-size:24px;font-weight:700;color:var(--exp);margin-bottom:4px;">${fmt(total)}</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px;">${months.find(m=>m.value===selectedMonth)?.label}</div>`;
+  if(!Object.keys(byCat).length){html+=`<div class="empty"><div class="empty-icon">📊</div><p>No data this month.</p></div>`;el.innerHTML=html;return;}
+  html+=`<div class="card"><div class="card-title">By Category</div>`;
+  Object.entries(byCat).sort((a,b)=>b[1]-a[1]).forEach(([name,amt])=>{
+    html+=`<div class="cat-row"><div class="cat-name">${name}</div><div class="cat-bar-wrap"><div class="cat-bar" style="width:${Math.round((amt/maxCat)*100)}%;background:var(--exp);"></div></div><div class="cat-amt">${fmt(amt)}</div></div>`;
+  });
+  html+=`</div>`;
+  el.innerHTML=html;
+}
 
-  let catBars=Object.entries(byCat).sort((a,b)=>b[1]-a[1]).map(([name,amt])=>`
-    <div class="xp-bar-row">
-      <div class="xp-bar-label">${name}</div>
-      <div class="xp-bar-outer"><div class="xp-bar-inner" style="width:${Math.round((amt/maxCat)*100)}%"></div></div>
-      <div class="xp-bar-amt">${fmt(amt)}</div>
-    </div>`).join('');
-
-  let medBars=Object.entries(byMed).sort((a,b)=>b[1]-a[1]).map(([name,amt])=>`
-    <div class="xp-bar-row">
-      <div class="xp-bar-label">${name}</div>
-      <div class="xp-bar-outer"><div class="xp-bar-inner" style="width:${Math.round((amt/maxMed)*100)}%;background:#10B981;"></div></div>
-      <div class="xp-bar-amt">${fmt(amt)}</div>
-    </div>`).join('');
-
+// ── UTILITY ──────────────────────────────────────────────
+async function renderUtility(){
+  const el=document.getElementById('main');el.innerHTML=`<div class="loading">Loading…</div>`;
+  const dbType=currentUtilType==='electricity'?'electricity':'gas';
+  const{data:readings}=await sb.from('utility_readings').select('*').eq('type',dbType).order('reading_date',{ascending:true});
+  const filled=fillGaps(readings||[]);
+  const now=new Date();
+  const ym=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const prevYm=(()=>{const d=new Date(now.getFullYear(),now.getMonth()-1,1);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;})();
+  const monthR=filled.filter(r=>r.reading_date.startsWith(ym));
+  const prevMonthR=filled.filter(r=>r.reading_date.startsWith(prevYm));
+  function consumption(rs){
+    const sorted=rs.slice().sort((a,b)=>a.reading_date.localeCompare(b.reading_date));
+    const days=[];
+    for(let i=1;i<sorted.length;i++){const adj=sorted[i].is_recharge?(sorted[i].recharge_amount||0):0;const c=(sorted[i-1].balance+adj)-sorted[i].balance;if(c>0)days.push({date:sorted[i].reading_date,consumed:c});}
+    return days;
+  }
+  const curDays=consumption(monthR),prevDays=consumption(prevMonthR);
+  const avgDaily=curDays.length?curDays.reduce((s,d)=>s+d.consumed,0)/curDays.length:0;
+  const prevAvg=prevDays.length?prevDays.reduce((s,d)=>s+d.consumed,0)/prevDays.length:0;
+  const latestR=(readings||[]).length?readings[readings.length-1]:null;
+  const curBal=latestR?latestR.balance:null;
+  const totalDays=daysInMonth(ym),daysLeft=totalDays-now.getDate();
+  const totalRecharged=(readings||[]).filter(r=>r.reading_date.startsWith(ym)&&r.is_recharge&&r.recharge_amount>0).reduce((s,r)=>s+(r.recharge_amount||0),0);
+  const isGas=currentUtilType==='gas';
+  const unit=isGas?'m³':'৳';
+  let costInfo='',alertHtml='';
+  if(!isGas){
+    const estBill=avgDaily*totalDays+ELEC_DEMAND_CHARGE;
+    const recAmt=(avgDaily*daysLeft+ELEC_DEMAND_CHARGE)*1.15;
+    costInfo=`<div class="util-grid"><div class="util-stat"><div class="util-stat-label">Avg/Day</div><div class="util-stat-value">${fmt(Math.round(avgDaily))}</div><div class="util-stat-sub">consumed</div></div><div class="util-stat"><div class="util-stat-label">Demand Charge</div><div class="util-stat-value">${fmt(ELEC_DEMAND_CHARGE)}</div><div class="util-stat-sub">fixed</div></div><div class="util-stat"><div class="util-stat-label">Est. Month Total</div><div class="util-stat-value">${fmt(Math.round(estBill))}</div><div class="util-stat-sub">usage+demand</div></div><div class="util-stat"><div class="util-stat-label">Recharged</div><div class="util-stat-value">${fmt(totalRecharged)}</div><div class="util-stat-sub">this month</div></div></div>`;
+    if(curBal!==null){const dUA=avgDaily>0?Math.floor((curBal-ELEC_ALERT_THRESHOLD)/avgDaily):null;const rD=dUA!==null?new Date(Date.now()+dUA*86400000).toLocaleDateString('en-BD',{day:'numeric',month:'short'}):'—';if(curBal<ELEC_ALERT_THRESHOLD)alertHtml+=`<div class="alert danger"><div class="alert-icon">🚨</div><div class="alert-text"><strong>Recharge now!</strong> Balance ৳${curBal} below ৳${ELEC_ALERT_THRESHOLD}. Top up: <strong>${fmt(Math.round(recAmt))}</strong></div></div>`;else alertHtml+=`<div class="alert info"><div class="alert-icon">📅</div><div class="alert-text">Balance hits ৳${ELEC_ALERT_THRESHOLD} in ~<strong>${dUA} days</strong> (${rD}). Recharge: <strong>${fmt(Math.round(recAmt))}</strong></div></div>`;}
+    if(prevAvg>0){const diff=((avgDaily-prevAvg)/prevAvg)*100;alertHtml+=`<div class="alert ${diff>0?'danger':'info'}"><div class="alert-icon">${diff>0?'📈':'📉'}</div><div class="alert-text"><strong>Using ${Math.abs(Math.round(diff))}% ${diff>0?'more':'less'} than last month.</strong> Last avg: ${fmt(Math.round(prevAvg))}/day.</div></div>`;}
+  } else {
+    const projM3=avgDaily*totalDays;const estBill=projM3*GAS_RATE+GAS_METER_CHARGE;const recM3=avgDaily*daysLeft*1.15;const recTk=recM3*GAS_RATE+GAS_METER_CHARGE;
+    costInfo=`<div class="util-grid"><div class="util-stat"><div class="util-stat-label">Avg/Day</div><div class="util-stat-value">${avgDaily.toFixed(2)}</div><div class="util-stat-sub">m³</div></div><div class="util-stat"><div class="util-stat-label">Meter Charge</div><div class="util-stat-value">${fmt(GAS_METER_CHARGE)}</div><div class="util-stat-sub">fixed</div></div><div class="util-stat"><div class="util-stat-label">Est. Bill</div><div class="util-stat-value">${fmt(Math.round(estBill))}</div><div class="util-stat-sub">usage+meter</div></div><div class="util-stat"><div class="util-stat-label">Recharged</div><div class="util-stat-value">${totalRecharged.toFixed(1)} m³</div><div class="util-stat-sub">this month</div></div></div>`;
+    if(curBal!==null){const dUE=avgDaily>0?Math.floor(curBal/avgDaily):null;if(curBal<avgDaily*3)alertHtml+=`<div class="alert danger"><div class="alert-icon">🚨</div><div class="alert-text"><strong>Recharge now!</strong> Top up <strong>${recM3.toFixed(1)} m³</strong> (~${fmt(Math.round(recTk))})</div></div>`;else{const rD=avgDaily>0?new Date(Date.now()+(dUE-3)*86400000).toLocaleDateString('en-BD',{day:'numeric',month:'short'}):'—';alertHtml+=`<div class="alert info"><div class="alert-icon">📅</div><div class="alert-text">Gas lasts ~<strong>${dUE} days</strong>. Recharge by <strong>${rD}</strong>: <strong>${recM3.toFixed(1)} m³</strong> (~${fmt(Math.round(recTk))})</div></div>`;}}
+    if(prevAvg>0){const diff=((avgDaily-prevAvg)/prevAvg)*100;alertHtml+=`<div class="alert ${diff>0?'danger':'info'}"><div class="alert-icon">${diff>0?'📈':'📉'}</div><div class="alert-text"><strong>Using ${Math.abs(Math.round(diff))}% ${diff>0?'more':'less'} than last month.</strong> Last avg: ${prevAvg.toFixed(2)} m³/day.</div></div>`;}
+  }
+  const recentFilled=filled.slice(-14).reverse();let readingsHtml='';
+  recentFilled.forEach((r,i)=>{
+    const older=recentFilled[i+1];const adj=r.is_recharge?(r.recharge_amount||0):0;const consumed=older?Math.max(0,(older.balance+adj)-r.balance):null;
+    const high=consumed&&avgDaily>0&&consumed>avgDaily*1.5;
+    const rBadge=r.is_recharge&&r.recharge_amount>0?`<span style="font-size:10px;background:var(--gas-light);color:var(--gas);border-radius:10px;padding:1px 6px;font-weight:600;margin-left:4px;">+${isGas?r.recharge_amount.toFixed(2):fmt(r.recharge_amount)}</span>`:'';
+    readingsHtml+=`<div class="reading-row"><div class="rr-date">${fmtDateShort(r.reading_date)}${r.interpolated?'<br><span class="rr-interp">~est.</span>':''}${rBadge}</div><div class="rr-balance">${r.balance.toFixed(isGas?2:0)} ${unit}</div><div class="rr-consumed ${high?'high':''}">${consumed!==null?'−'+(isGas?consumed.toFixed(2):Math.round(consumed))+' '+unit:'—'}</div></div>`;
+  });
+  const tc=isGas?'gas':'elec';
   el.innerHTML=`
-    <div class="month-filter">${monthFilter}</div>
-    <div class="xp-amount-hero">
-      <div class="xp-amount-month">${months.find(m=>m.value===xpSelectedMonth)?.label||''}</div>
-      <div class="xp-amount-val">${fmt(total)}</div>
-      <div style="font-size:12px;color:var(--text-muted);">${(expenses||[]).length} expenses</div>
+    <div class="util-toggle"><button class="util-btn elec ${!isGas?'active':''}" onclick="switchUtilType('electricity')">⚡ Electricity</button><button class="util-btn gas ${isGas?'active':''}" onclick="switchUtilType('gas')">🔥 Gas</button></div>
+    ${curBal!==null?`<div class="util-hero ${tc}"><div class="util-hero-label">Current Balance</div><div class="util-hero-value ${tc}">${curBal.toFixed(isGas?2:0)} ${unit}</div><div class="util-hero-sub">as of ${latestR?fmtDate(latestR.reading_date):'—'}</div></div>`:`<div class="alert info"><div class="alert-icon">💡</div><div class="alert-text">No readings yet. Log your first reading below.</div></div>`}
+    ${alertHtml}${costInfo}
+    <div class="form-sheet" style="margin-bottom:12px;">
+      <div class="form-header"><div class="card-title" style="margin-bottom:0;">${isGas?'🔥':'⚡'} Log Reading</div><div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Auto-logging for today: ${fmtDate(today())}</div></div>
+      <div class="form-body">
+        <div class="form-group"><label>Balance (${unit})</label><input type="number" id="u-balance" placeholder="0" min="0" step="${isGas?'0.01':'1'}" inputmode="decimal"/></div>
+        <div class="form-group">
+          <label>Recharge Day?</label>
+          <div onclick="toggleRechargeToggle()" id="recharge-toggle-wrap" style="display:flex;align-items:center;gap:10px;padding:11px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;background:var(--surface);transition:border 0.15s;">
+            <div id="recharge-toggle-box" style="width:20px;height:20px;border-radius:6px;border:2px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;transition:all 0.15s;flex-shrink:0;"></div>
+            <span id="recharge-toggle-label" style="font-size:14px;font-weight:500;color:var(--text-muted);">Not a recharge day</span>
+            <input type="checkbox" id="u-is-recharge" style="display:none;"/>
+          </div>
+        </div>
+        <div class="form-group" id="recharge-field" style="display:none;"><label>Recharge Amount (${unit})</label><input type="number" id="u-recharge-amount" placeholder="0" min="0" step="${isGas?'0.01':'1'}" inputmode="decimal"/></div>
+        <div class="form-group"><label>Notes (optional)</label><input type="text" id="u-notes" placeholder="e.g. recharged via bKash"/></div>
+      </div>
+      <div class="form-footer"><button class="btn btn-primary" onclick="saveReading()">Save Reading</button></div>
     </div>
-    <div class="card">
-      <div class="card-title">By Category</div>
-      ${catBars||'<div style="font-size:13px;color:var(--text-muted);">No data this month</div>'}
-    </div>
-    <div class="card">
-      <div class="card-title">By Payment Medium</div>
-      ${medBars||'<div style="font-size:13px;color:var(--text-muted);">No data this month</div>'}
-    </div>`;
-}
-
-// SETTINGS
-function renderXpSettings(el){
-  const catHtml=xpCategories.length?xpCategories.map(c=>`<span class="cat-tag">${c.name} <button class="cat-tag-del" onclick="deleteXpCategory('${c.id}','${esc(c.name)}')">×</button></span>`).join(''):`<span style="font-size:13px;color:var(--text-muted);">No categories yet.</span>`;
-  const medHtml=xpMediums.length?xpMediums.map(m=>`<span class="cat-tag">${m.name} <button class="cat-tag-del" onclick="deleteXpMedium('${m.id}','${esc(m.name)}')">×</button></span>`).join(''):`<span style="font-size:13px;color:var(--text-muted);">No mediums yet.</span>`;
-  el.innerHTML=`
-    <div class="card">
-      <div class="card-title">Expense Categories</div>
-      <div style="margin-bottom:14px;">${catHtml}</div>
-      <div style="display:flex;gap:8px;"><input type="text" id="xp-new-cat" placeholder="New category…" style="flex:1;" /><button class="btn btn-primary btn-sm" style="background:#8B5CF6;" onclick="addXpCategory()">Add</button></div>
-    </div>
-    <div class="card">
-      <div class="card-title">Payment Mediums</div>
-      <div style="margin-bottom:14px;">${medHtml}</div>
-      <div style="display:flex;gap:8px;"><input type="text" id="xp-new-med" placeholder="New medium…" style="flex:1;" /><button class="btn btn-primary btn-sm" style="background:#10B981;" onclick="addXpMedium()">Add</button></div>
-    </div>`;
-}
-
-async function addXpCategory(){
-  const name=document.getElementById('xp-new-cat').value.trim();if(!name)return;
-  const{error}=await xp.from('categories').insert({name});
-  if(error){showToast('Error: '+error.message);return;}
-  showToast(`✓ "${name}" added`);await loadXpData();renderXpSettings(document.getElementById('xp-content'));
-}
-async function deleteXpCategory(id,name){
-  if(!confirm(`Delete category "${name}"?`))return;
-  await xp.from('categories').delete().eq('id',id);
-  showToast(`Deleted "${name}"`);await loadXpData();renderXpSettings(document.getElementById('xp-content'));
-}
-async function addXpMedium(){
-  const name=document.getElementById('xp-new-med').value.trim();if(!name)return;
-  const{error}=await xp.from('mediums').insert({name});
-  if(error){showToast('Error: '+error.message);return;}
-  showToast(`✓ "${name}" added`);await loadXpData();renderXpSettings(document.getElementById('xp-content'));
-}
-async function deleteXpMedium(id,name){
-  if(!confirm(`Delete medium "${name}"?`))return;
-  await xp.from('mediums').delete().eq('id',id);
-  showToast(`Deleted "${name}"`);await loadXpData();renderXpSettings(document.getElementById('xp-content'));
-}
-
-async function init(){
-  history.pushState(null,'',location.href); // lock back button
-  initTheme();
-  document.getElementById('main').innerHTML=`<div class="loading">Loading…</div>`;
-  await loadCategories();render();
-}
-init();
-</script>
-</body>
-</html>
+    ${recentFilled.length?`<div class="card"><div class="card-title">Recent Readings</div><div style="margin:-4px -4px;"><div class="reading-row" style="pad
