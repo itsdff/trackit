@@ -619,12 +619,21 @@ async function renderUtility(){
   const prevMonthYm=(()=>{const d=new Date(now.getFullYear(),now.getMonth()-1,1);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;})();
   const monthReadings=filled.filter(r=>r.reading_date.startsWith(ym));
   const prevMonthReadings=filled.filter(r=>r.reading_date.startsWith(prevMonthYm));
+
+  // Recharge-aware consumption: on a recharge day, subtract recharge amount before computing drop
   function consumptionFromReadings(rs){
     const sorted=rs.slice().sort((a,b)=>a.reading_date.localeCompare(b.reading_date));
     const days=[];
-    for(let i=1;i<sorted.length;i++){const consumed=sorted[i-1].balance-sorted[i].balance;if(consumed>0)days.push({date:sorted[i].reading_date,consumed});}
+    for(let i=1;i<sorted.length;i++){
+      // effective previous balance = prev balance (recharge already added to curr balance)
+      // if today is recharge day: consumed = (prev_balance + recharge_amount) - curr_balance
+      const rechargeAdj=sorted[i].is_recharge?(sorted[i].recharge_amount||0):0;
+      const consumed=(sorted[i-1].balance+rechargeAdj)-sorted[i].balance;
+      if(consumed>0)days.push({date:sorted[i].reading_date,consumed});
+    }
     return days;
   }
+
   const currentDays=consumptionFromReadings(monthReadings);
   const prevDays=consumptionFromReadings(prevMonthReadings);
   const avgDaily=currentDays.length?currentDays.reduce((s,d)=>s+d.consumed,0)/currentDays.length:0;
@@ -632,6 +641,12 @@ async function renderUtility(){
   const latestReading=(readings||[]).length?readings[readings.length-1]:null;
   const currentBalance=latestReading?latestReading.balance:null;
   const totalDays=daysInMonth(ym);const daysLeft=totalDays-now.getDate();
+
+  // Total recharged this month
+  const totalRechargedThisMonth=(readings||[])
+    .filter(r=>r.reading_date.startsWith(ym)&&r.is_recharge&&r.recharge_amount>0)
+    .reduce((s,r)=>s+(r.recharge_amount||0),0);
+
   let costInfo='',alertHtml='';
   if(currentUtilType==='electricity'){
     const estimatedBill=avgDaily*totalDays+ELEC_DEMAND_CHARGE;
@@ -640,7 +655,7 @@ async function renderUtility(){
       <div class="util-stat"><div class="util-stat-label">Avg/Day</div><div class="util-stat-value">${fmt(Math.round(avgDaily))}</div><div class="util-stat-sub">consumed</div></div>
       <div class="util-stat"><div class="util-stat-label">Demand Charge</div><div class="util-stat-value">${fmt(ELEC_DEMAND_CHARGE)}</div><div class="util-stat-sub">fixed</div></div>
       <div class="util-stat"><div class="util-stat-label">Est. Month Total</div><div class="util-stat-value">${fmt(Math.round(estimatedBill))}</div><div class="util-stat-sub">usage + demand</div></div>
-      <div class="util-stat"><div class="util-stat-label">Days Left</div><div class="util-stat-value">${daysLeft}</div><div class="util-stat-sub">this month</div></div>
+      <div class="util-stat"><div class="util-stat-label">Recharged</div><div class="util-stat-value">${fmt(totalRechargedThisMonth)}</div><div class="util-stat-sub">this month</div></div>
     </div>`;
     if(currentBalance!==null){
       const daysUntilAlert=avgDaily>0?Math.floor((currentBalance-ELEC_ALERT_THRESHOLD)/avgDaily):null;
@@ -658,7 +673,7 @@ async function renderUtility(){
       <div class="util-stat"><div class="util-stat-label">Avg/Day</div><div class="util-stat-value">${avgDaily.toFixed(2)}</div><div class="util-stat-sub">m³</div></div>
       <div class="util-stat"><div class="util-stat-label">Meter Charge</div><div class="util-stat-value">${fmt(GAS_METER_CHARGE)}</div><div class="util-stat-sub">fixed</div></div>
       <div class="util-stat"><div class="util-stat-label">Est. Month Bill</div><div class="util-stat-value">${fmt(Math.round(estimatedBill))}</div><div class="util-stat-sub">usage + meter</div></div>
-      <div class="util-stat"><div class="util-stat-label">Est. Usage</div><div class="util-stat-value">${projectedM3.toFixed(1)}</div><div class="util-stat-sub">m³ this month</div></div>
+      <div class="util-stat"><div class="util-stat-label">Recharged</div><div class="util-stat-value">${totalRechargedThisMonth.toFixed(1)} m³</div><div class="util-stat-sub">this month</div></div>
     </div>`;
     if(currentBalance!==null){
       const daysUntilEmpty=avgDaily>0?Math.floor(currentBalance/avgDaily):null;
@@ -667,18 +682,27 @@ async function renderUtility(){
     }
     if(prevAvgDaily>0){const diff=((avgDaily-prevAvgDaily)/prevAvgDaily)*100;const cls=diff>0?'danger':'info';alertHtml+=`<div class="alert ${cls}"><div class="alert-icon">${diff>0?'📈':'📉'}</div><div class="alert-text"><strong>Using ${Math.abs(Math.round(diff))}% ${diff>0?'more':'less'} per day than last month.</strong> Last month avg: ${prevAvgDaily.toFixed(2)} m³/day.</div></div>`;}
   }
+
+  // Build recent readings table (newest first, recharge-aware consumption)
+  const recentRaw=(readings||[]).slice(-14).reverse();
   const recentFilled=filled.slice(-14).reverse();
   const unit=currentUtilType==='electricity'?'৳':'m³';
+  const isGas=currentUtilType==='gas';
   let readingsHtml='';
   recentFilled.forEach((r,i)=>{
-    const next=recentFilled[i+1];const consumed=next?Math.max(0,next.balance-r.balance):null;
+    const older=recentFilled[i+1];
+    // consumed = (older_balance + recharge_if_today) - current_balance
+    const rechargeAdj=r.is_recharge?(r.recharge_amount||0):0;
+    const consumed=older?Math.max(0,(older.balance+rechargeAdj)-r.balance):null;
     const highConsume=consumed&&avgDaily>0&&consumed>avgDaily*1.5;
+    const rechargeBadge=r.is_recharge&&r.recharge_amount>0?`<span style="font-size:10px;background:var(--gas-light);color:var(--gas);border-radius:10px;padding:1px 6px;font-weight:600;margin-left:4px;">+${isGas?r.recharge_amount.toFixed(2):fmt(r.recharge_amount)}</span>`:'';
     readingsHtml+=`<div class="reading-row">
-      <div class="rr-date">${fmtDateShort(r.reading_date)}${r.interpolated?'<br><span class="rr-interp">~est.</span>':''}</div>
-      <div class="rr-balance">${r.balance.toFixed(currentUtilType==='gas'?2:0)} ${unit}</div>
-      <div class="rr-consumed ${highConsume?'high':''}">${consumed!==null?'−'+(currentUtilType==='gas'?consumed.toFixed(2):Math.round(consumed))+' '+unit:'—'}</div>
+      <div class="rr-date">${fmtDateShort(r.reading_date)}${r.interpolated?'<br><span class="rr-interp">~est.</span>':''}${rechargeBadge}</div>
+      <div class="rr-balance">${r.balance.toFixed(isGas?2:0)} ${unit}</div>
+      <div class="rr-consumed ${highConsume?'high':''}">${consumed!==null?'−'+(isGas?consumed.toFixed(2):Math.round(consumed))+' '+unit:'—'}</div>
     </div>`;
   });
+
   const typeColor=currentUtilType==='electricity'?'elec':'gas';
   const heroIcon=currentUtilType==='electricity'?'⚡':'🔥';
   el.innerHTML=`
@@ -686,7 +710,7 @@ async function renderUtility(){
       <button class="util-btn elec ${currentUtilType==='electricity'?'active':''}" onclick="switchUtilType('electricity')">⚡ Electricity</button>
       <button class="util-btn gas ${currentUtilType==='gas'?'active':''}" onclick="switchUtilType('gas')">🔥 Gas</button>
     </div>
-    ${currentBalance!==null?`<div class="util-hero ${typeColor}"><div class="util-hero-label">Current Balance</div><div class="util-hero-value ${typeColor}">${currentBalance.toFixed(currentUtilType==='gas'?2:0)} ${unit}</div><div class="util-hero-sub">as of ${latestReading?fmtDate(latestReading.reading_date):'—'}</div></div>`:`<div class="alert info"><div class="alert-icon">💡</div><div class="alert-text">No readings yet. Log your first ${typeLabel} reading below.</div></div>`}
+    ${currentBalance!==null?`<div class="util-hero ${typeColor}"><div class="util-hero-label">Current Balance</div><div class="util-hero-value ${typeColor}">${currentBalance.toFixed(isGas?2:0)} ${unit}</div><div class="util-hero-sub">as of ${latestReading?fmtDate(latestReading.reading_date):'—'}</div></div>`:`<div class="alert info"><div class="alert-icon">💡</div><div class="alert-text">No readings yet. Log your first ${typeLabel} reading below.</div></div>`}
     ${alertHtml}${costInfo}
     <div class="form-sheet" style="margin-bottom:12px;">
       <div class="form-header">
@@ -694,8 +718,16 @@ async function renderUtility(){
         <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Auto-logging for today: ${fmtDate(today())}</div>
       </div>
       <div class="form-body">
-        <div class="form-group"><label>Balance (${unit})</label><input type="number" id="u-balance" placeholder="0" min="0" step="${currentUtilType==='gas'?'0.01':'1'}" inputmode="decimal" /></div>
-        <div class="form-group"><label>Notes (optional)</label><input type="text" id="u-notes" placeholder="e.g. after recharge" /></div>
+        <div class="form-group"><label>Balance (${unit})</label><input type="number" id="u-balance" placeholder="0" min="0" step="${isGas?'0.01':'1'}" inputmode="decimal" /></div>
+        <div class="form-group" style="flex-direction:row;align-items:center;gap:10px;">
+          <input type="checkbox" id="u-is-recharge" style="width:auto;accent-color:var(--accent);" onchange="toggleRechargeField()" />
+          <label for="u-is-recharge" style="text-transform:none;font-size:14px;font-weight:500;color:var(--text);letter-spacing:0;">This is a recharge day</label>
+        </div>
+        <div class="form-group" id="recharge-field" style="display:none;">
+          <label>Recharge Amount (${unit})</label>
+          <input type="number" id="u-recharge-amount" placeholder="0" min="0" step="${isGas?'0.01':'1'}" inputmode="decimal" />
+        </div>
+        <div class="form-group"><label>Notes (optional)</label><input type="text" id="u-notes" placeholder="e.g. recharged via bKash" /></div>
       </div>
       <div class="form-footer"><button class="btn btn-primary" onclick="saveReading()">Save Reading</button></div>
     </div>
@@ -708,16 +740,39 @@ function fillGaps(readings){
     if(i<readings.length-1){
       const curr=new Date(readings[i].reading_date),next=new Date(readings[i+1].reading_date);
       const days=Math.round((next-curr)/86400000);
-      if(days>1){const drop=(readings[i].balance-readings[i+1].balance)/days;for(let d=1;d<days;d++){const dt=new Date(curr.getTime()+d*86400000);result.push({id:'interp-'+dt.toISOString().split('T')[0],type:readings[i].type,reading_date:dt.toISOString().split('T')[0],balance:parseFloat(Math.max(0,readings[i].balance-drop*d).toFixed(2)),interpolated:true});}}
+      // For gap filling, account for recharge on the next real reading
+      const nextRecharge=readings[i+1].is_recharge?(readings[i+1].recharge_amount||0):0;
+      if(days>1){
+        const effectivePrev=readings[i].balance;
+        const effectiveNext=readings[i+1].balance-nextRecharge; // remove recharge to get true drop
+        const drop=(effectivePrev-effectiveNext)/days;
+        for(let d=1;d<days;d++){
+          const dt=new Date(curr.getTime()+d*86400000);
+          result.push({id:'interp-'+dt.toISOString().split('T')[0],type:readings[i].type,reading_date:dt.toISOString().split('T')[0],balance:parseFloat(Math.max(0,readings[i].balance-drop*d).toFixed(2)),interpolated:true,is_recharge:false,recharge_amount:0});
+        }
+      }
     }
   }
   return result.sort((a,b)=>a.reading_date.localeCompare(b.reading_date));
 }
+function toggleRechargeField(){
+  const show=document.getElementById('u-is-recharge').checked;
+  document.getElementById('recharge-field').style.display=show?'flex':'none';
+}
 function switchUtilType(t){currentUtilType=t;renderUtility();}
 async function saveReading(){
-  const date=today();const balance=parseFloat(document.getElementById('u-balance').value);const notes=document.getElementById('u-notes').value.trim();
+  const date=today();
+  const balance=parseFloat(document.getElementById('u-balance').value);
+  const notes=document.getElementById('u-notes').value.trim();
+  const isRecharge=document.getElementById('u-is-recharge')?.checked||false;
+  const rechargeAmount=isRecharge?parseFloat(document.getElementById('u-recharge-amount')?.value||0):0;
   if(isNaN(balance)||balance<0){showToast('Please enter a valid balance');return;}
-  const{error}=await sb.from('utility_readings').upsert({type:currentUtilType==='electricity'?'electricity':'gas',reading_date:date,balance,notes:notes||null},{onConflict:'type,reading_date'});
+  if(isRecharge&&(!rechargeAmount||rechargeAmount<=0)){showToast('Please enter the recharge amount');return;}
+  const{error}=await sb.from('utility_readings').upsert({
+    type:currentUtilType==='electricity'?'electricity':'gas',
+    reading_date:date,balance,notes:notes||null,
+    is_recharge:isRecharge,recharge_amount:isRecharge?rechargeAmount:0
+  },{onConflict:'type,reading_date'});
   if(error){showToast('Error saving reading');return;}
   showToast('✓ Reading saved!');renderUtility();
 }
