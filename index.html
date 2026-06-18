@@ -671,7 +671,7 @@ async function renderUtility(){
   const unit=currentUtilType==='electricity'?'৳':'m³';
   let readingsHtml='';
   recentFilled.forEach((r,i)=>{
-    const next=recentFilled[i+1];const consumed=next?Math.max(0,r.balance-next.balance):null;
+    const next=recentFilled[i+1];const consumed=next?Math.max(0,next.balance-r.balance):null;
     const highConsume=consumed&&avgDaily>0&&consumed>avgDaily*1.5;
     readingsHtml+=`<div class="reading-row">
       <div class="rr-date">${fmtDateShort(r.reading_date)}${r.interpolated?'<br><span class="rr-interp">~est.</span>':''}</div>
