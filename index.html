@@ -846,7 +846,7 @@ async function renderUtility(){
     if(pAvg>0){const diff=((avg-pAvg)/pAvg)*100;alertHtml+=`<div class="alert ${diff>0?'danger':'success'}"><div class="alert-icon">${diff>0?'📈':'📉'}</div><div class="alert-text"><strong>${Math.abs(Math.round(diff))}% ${diff>0?'more':'less'} than last month.</strong></div></div>`;}
   }
   const rf=filled.slice(-14).reverse();let rHtml='';
-  rf.forEach((r,i)=>{const older=rf[i+1];const adj=r.is_recharge?(r.recharge_amount||0):0;const consumed=older?Math.max(0,(older.balance+adj)-r.balance):null;const high=consumed&&avg>0&&consumed>avg*1.5;const rb=r.is_recharge&&r.recharge_amount>0?`<span style="font-size:10px;background:var(--gas-light);color:var(--gas);border-radius:10px;padding:1px 6px;font-weight:600;margin-left:4px;">+${isGas?r.recharge_amount.toFixed(2):fmt(r.recharge_amount)}</span>`:'';rHtml+=`<div class="reading-row"><div class="rr-date">${fmtShort(r.reading_date)}${r.interpolated?'<br><span class="rr-interp">~est.</span>':''}${rb}</div><div class="rr-balance">${r.balance.toFixed(isGas?2:0)} ${unit}</div><div class="rr-consumed ${high?'high':''}">${consumed!==null?'−'+(isGas?consumed.toFixed(2):Math.round(consumed))+' '+unit:'—'}</div></div>`;});
+  rf.forEach((r,i)=>{const older=rf[i+1];const adj=r.is_recharge?(r.recharge_amount||0):0;const consumed=older?Math.max(0,(older.balance+adj)-r.balance):null;const high=consumed&&avg>0&&consumed>avg*1.5;const rb=r.is_recharge&&r.recharge_amount>0?`<span style="font-size:10px;background:var(--gas-light);color:var(--gas);border-radius:10px;padding:1px 6px;font-weight:600;margin-left:4px;">+${isGas?r.recharge_amount.toFixed(2):fmt(r.recharge_amount)}</span>`:'';const clickable=!r.interpolated;rHtml+=`<div class="reading-row" ${clickable?`onclick="editReading('${r.id}','${r.type}','${r.reading_date}')" style="cursor:pointer;"`:''}><div class="rr-date">${fmtShort(r.reading_date)}${r.interpolated?'<br><span class="rr-interp">~est.</span>':''}${rb}</div><div class="rr-balance">${r.balance.toFixed(isGas?2:0)} ${unit}</div><div class="rr-consumed ${high?'high':''}">${consumed!==null?'−'+(isGas?consumed.toFixed(2):Math.round(consumed))+' '+unit:'—'}</div>${clickable?'<span style="font-size:12px;color:var(--text-muted);margin-left:4px;">✏️</span>':''}</div>`;});
   const tc=isGas?'gas':'elec';
   el.innerHTML=`<div class="util-toggle"><button class="util-btn elec ${!isGas?'active':''}" onclick="setUtil('electricity')">⚡ Electricity</button><button class="util-btn gas ${isGas?'active':''}" onclick="setUtil('gas')">🔥 Gas</button></div>
     ${curBal!==null?`<div class="util-hero ${tc}"><div class="util-hero-label">Current Balance</div><div class="util-hero-value ${tc}">${curBal.toFixed(isGas?2:0)} ${unit}</div><div class="util-hero-sub">as of ${latestR?fmtDate(latestR.reading_date):'—'}</div></div>`:`<div class="alert info"><div class="alert-icon">💡</div><div class="alert-text">No readings yet. Log below.</div></div>`}
@@ -875,6 +875,47 @@ function fillGaps(readings){
   return result.sort((a,b)=>a.reading_date.localeCompare(b.reading_date));
 }
 function setUtil(t){utilType=t;renderUtility();}
+
+async function editReading(id,type,date){
+  const{data:r}=await sb.from('utility_readings').select('*').eq('id',id).single();if(!r)return;
+  const isGas=type==='gas';const unit=isGas?'m³':'৳';
+  showModal(`<div class="modal"><div class="modal-header"><div class="modal-title">${isGas?'🔥':'⚡'} Edit Reading — ${fmtDate(date)}</div><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Balance (${unit})</label><input type="number" id="er-balance" value="${r.balance}" step="${isGas?'0.01':'1'}" inputmode="decimal"/></div>
+      <div class="form-group" style="flex-direction:row;align-items:center;gap:10px;">
+        <input type="checkbox" id="er-is-rech" ${r.is_recharge?'checked':''} style="width:auto;accent-color:var(--accent);" onchange="document.getElementById('er-rech-field').style.display=this.checked?'flex':'none';"/>
+        <label for="er-is-rech" style="text-transform:none;font-size:14px;font-weight:500;color:var(--text);letter-spacing:0;">This was a recharge day</label>
+      </div>
+      <div class="form-group" id="er-rech-field" style="display:${r.is_recharge?'flex':'none'};">
+        <label>Recharge Amount (${unit})</label>
+        <input type="number" id="er-rech-amt" value="${r.recharge_amount||''}" step="${isGas?'0.01':'1'}" inputmode="decimal"/>
+      </div>
+      <div class="form-group"><label>Notes</label><input type="text" id="er-notes" value="${r.notes||''}"/></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger-outline btn-sm" onclick="deleteReading('${id}')">Delete</button>
+      <button class="btn btn-outline btn-sm" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary btn-sm" style="flex:1;" onclick="saveEditReading('${id}')">Save</button>
+    </div></div>`);
+}
+
+async function saveEditReading(id){
+  const balance=parseFloat(document.getElementById('er-balance').value);
+  const isRech=document.getElementById('er-is-rech').checked;
+  const rechAmt=isRech?parseFloat(document.getElementById('er-rech-amt').value||0):0;
+  const notes=document.getElementById('er-notes').value.trim()||null;
+  if(isNaN(balance)||balance<0){showToast('Enter a valid balance');return;}
+  if(isRech&&(!rechAmt||rechAmt<=0)){showToast('Enter recharge amount');return;}
+  const{error}=await sb.from('utility_readings').update({balance,is_recharge:isRech,recharge_amount:isRech?rechAmt:0,notes}).eq('id',id);
+  if(error){showToast('Error: '+error.message);return;}
+  showToast('✓ Reading updated!');closeModal();renderUtility();
+}
+
+async function deleteReading(id){
+  if(!confirm('Delete this reading?'))return;
+  await sb.from('utility_readings').delete().eq('id',id);
+  showToast('Deleted');closeModal();renderUtility();
+}
 function toggleRechToggle(){
   const cb=document.getElementById('u-is-rech');cb.checked=!cb.checked;const c=cb.checked;
   const box=document.getElementById('rech-box'),lbl=document.getElementById('rech-label'),wrap=document.getElementById('rech-wrap');
