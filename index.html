@@ -867,7 +867,68 @@ async function renderUtility(){
       </div>
       <div class="form-footer"><button class="btn btn-primary" onclick="saveReading()">Save Reading</button></div>
     </div>
-    ${rf.length?`<div class="card"><div class="card-title">Recent Readings</div><div style="margin:-4px;"><div class="reading-row" style="padding:8px 16px;"><div class="rr-date" style="font-weight:600;font-size:11px;text-transform:uppercase;">Date</div><div class="rr-balance" style="font-weight:600;font-size:11px;text-transform:uppercase;">Balance</div><div class="rr-consumed" style="font-weight:600;font-size:11px;text-transform:uppercase;">Used</div></div>${rHtml}</div></div>`:''}`;
+    ${rf.length?`<div class="card"><div class="card-title">Recent Readings</div><div style="margin:-4px;"><div class="reading-row" style="padding:8px 16px;"><div class="rr-date" style="font-weight:600;font-size:11px;text-transform:uppercase;">Date</div><div class="rr-balance" style="font-weight:600;font-size:11px;text-transform:uppercase;">Balance</div><div class="rr-consumed" style="font-weight:600;font-size:11px;text-transform:uppercase;">Used</div></div>${rHtml}</div></div>`:''}
+    ${buildMonthlyHistory(filled,isGas,unit)}`;
+}
+
+function buildMonthlyHistory(filled,isGas,unit){
+  if(!filled.length)return'';
+  // Get distinct months from readings
+  const months={};
+  filled.forEach(r=>{
+    if(r.interpolated)return;
+    const ym=r.reading_date.slice(0,7);
+    if(!months[ym])months[ym]={readings:[]};
+    months[ym].readings.push(r);
+  });
+  // Also include interpolated for consumption calc
+  const allByMonth={};
+  filled.forEach(r=>{
+    const ym=r.reading_date.slice(0,7);
+    if(!allByMonth[ym])allByMonth[ym]=[];
+    allByMonth[ym].push(r);
+  });
+
+  const sortedMonths=Object.keys(months).sort().reverse();
+  if(sortedMonths.length<1)return'';
+
+  function monthLabel(ym){const[y,m]=ym.split('-').map(Number);return new Date(y,m-1,1).toLocaleDateString('en-BD',{month:'long',year:'numeric'});}
+  function computeMonthStats(ym){
+    const rs=(allByMonth[ym]||[]).slice().sort((a,b)=>a.reading_date.localeCompare(b.reading_date));
+    const days=[],rechargeTotal=months[ym]?.readings.reduce((s,r)=>s+(r.is_recharge?(r.recharge_amount||0):0),0)||0;
+    for(let i=1;i<rs.length;i++){
+      const adj=rs[i].is_recharge?(rs[i].recharge_amount||0):0;
+      const c=(rs[i-1].balance+adj)-rs[i].balance;
+      if(c>0)days.push(c);
+    }
+    const totalConsumed=days.reduce((a,b)=>a+b,0);
+    const avgDaily=days.length?totalConsumed/days.length:0;
+    return{totalConsumed,avgDaily,rechargeTotal,days:days.length};
+  }
+
+  let rows='';
+  sortedMonths.forEach(ym=>{
+    const{totalConsumed,avgDaily,rechargeTotal,days}=computeMonthStats(ym);
+    if(!days)return;
+    const rechHtml=rechargeTotal>0?`<div style="font-size:11px;color:var(--gas);font-weight:600;margin-top:2px;">Recharged: ${isGas?rechargeTotal.toFixed(2):fmt(rechargeTotal)}</div>`:'';
+    rows+=`<div style="padding:12px 0;border-bottom:1px solid var(--border);">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+        <div>
+          <div style="font-weight:600;font-size:14px;">${monthLabel(ym)}</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">Avg/day: <strong>${isGas?avgDaily.toFixed(2):fmt(Math.round(avgDaily))}</strong> ${unit} · ${days} days logged</div>
+          ${rechHtml}
+        </div>
+        <div style="text-align:right;flex-shrink:0;">
+          <div style="font-family:'Sora',sans-serif;font-size:18px;font-weight:700;color:${isGas?'var(--gas)':'var(--elec)'};">${isGas?totalConsumed.toFixed(2):fmt(Math.round(totalConsumed))}</div>
+          <div style="font-size:11px;color:var(--text-muted);">${isGas?'m³ used':'consumed'}</div>
+          ${!isGas?`<div style="font-size:11px;color:var(--text-muted);">+৳252 demand</div>`:''}
+        </div>
+      </div>
+    </div>`;
+  });
+
+  if(!rows)return'';
+  return`<div class="card" style="margin-top:4px;"><div class="card-title">📅 Monthly History</div><div style="margin:-4px 0;">${rows}</div></div>`;
 }
 function fillGaps(readings){
   if(!readings.length)return[];const result=[];
