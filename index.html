@@ -836,12 +836,12 @@ async function renderUtility(){
   const unit=isGas?'m³':'৳';let costInfo='',alertHtml='';
   if(!isGas){
     const est=avg*totalDays+ELEC_DEMAND_CHARGE;const rec=(avg*dLeft+ELEC_DEMAND_CHARGE)*1.15;
-    costInfo=`<div class="util-grid"><div class="util-stat"><div class="util-stat-label">Avg/Day</div><div class="util-stat-value">${fmt(Math.round(avg))}</div></div><div class="util-stat"><div class="util-stat-label">Demand Charge</div><div class="util-stat-value">${fmt(ELEC_DEMAND_CHARGE)}</div></div><div class="util-stat"><div class="util-stat-label">Est. Month</div><div class="util-stat-value">${fmt(Math.round(est))}</div></div><div class="util-stat"><div class="util-stat-label">Recharged</div><div class="util-stat-value">${fmt(totalRech)}</div></div></div>`;
+    costInfo=`<div class="util-grid"><div class="util-stat"><div class="util-stat-label">Avg/Day</div><div class="util-stat-value">${fmt(Math.round(avg))}</div></div><div class="util-stat"><div class="util-stat-label">Demand Charge</div><div class="util-stat-value">${fmt(ELEC_DEMAND_CHARGE)}</div></div><div class="util-stat"><div class="util-stat-label">Est. Month</div><div class="util-stat-value">${fmt(Math.round(est))}</div></div><div class="util-stat"><div class="util-stat-label">Recharged</div><div class="util-stat-value">${fmt(totalRech)}</div><div class="util-stat-sub">net to balance</div></div></div>`;
     if(curBal!==null){const dUA=avg>0?Math.floor((curBal-ELEC_ALERT)/avg):null;const rD=dUA!==null?new Date(Date.now()+dUA*86400000).toLocaleDateString('en-BD',{day:'numeric',month:'short'}):'—';if(curBal<ELEC_ALERT)alertHtml+=`<div class="alert danger"><div class="alert-icon">🚨</div><div class="alert-text"><strong>Recharge now!</strong> ৳${curBal} below ৳${ELEC_ALERT}. Top up: <strong>${fmt(Math.round(rec))}</strong></div></div>`;else alertHtml+=`<div class="alert info"><div class="alert-icon">📅</div><div class="alert-text">Hits ৳${ELEC_ALERT} in ~<strong>${dUA} days</strong> (${rD}). Recharge: <strong>${fmt(Math.round(rec))}</strong></div></div>`;}
     if(pAvg>0){const diff=((avg-pAvg)/pAvg)*100;alertHtml+=`<div class="alert ${diff>0?'danger':'success'}"><div class="alert-icon">${diff>0?'📈':'📉'}</div><div class="alert-text"><strong>${Math.abs(Math.round(diff))}% ${diff>0?'more':'less'} than last month.</strong> Last avg: ${fmt(Math.round(pAvg))}/day.</div></div>`;}
   } else {
     const pM3=avg*totalDays;const est=pM3*GAS_RATE+GAS_METER;const rM3=avg*dLeft*1.15;const rTk=rM3*GAS_RATE+GAS_METER;
-    costInfo=`<div class="util-grid"><div class="util-stat"><div class="util-stat-label">Avg/Day</div><div class="util-stat-value">${avg.toFixed(2)}</div></div><div class="util-stat"><div class="util-stat-label">Meter Charge</div><div class="util-stat-value">${fmt(GAS_METER)}</div></div><div class="util-stat"><div class="util-stat-label">Est. Bill</div><div class="util-stat-value">${fmt(Math.round(est))}</div></div><div class="util-stat"><div class="util-stat-label">Recharged</div><div class="util-stat-value">${totalRech.toFixed(1)} m³</div></div></div>`;
+    costInfo=`<div class="util-grid"><div class="util-stat"><div class="util-stat-label">Avg/Day</div><div class="util-stat-value">${avg.toFixed(2)}</div></div><div class="util-stat"><div class="util-stat-label">Meter Charge</div><div class="util-stat-value">${fmt(GAS_METER)}</div></div><div class="util-stat"><div class="util-stat-label">Est. Bill</div><div class="util-stat-value">${fmt(Math.round(est))}</div></div><div class="util-stat"><div class="util-stat-label">Recharged</div><div class="util-stat-value">${totalRech.toFixed(2)} m³</div><div class="util-stat-sub">≈ ${fmt(Math.round(totalRech*GAS_RATE+GAS_METER))}</div></div></div>`;
     if(curBal!==null){const dUE=avg>0?Math.floor(curBal/avg):null;if(curBal<avg*3)alertHtml+=`<div class="alert danger"><div class="alert-icon">🚨</div><div class="alert-text"><strong>Recharge now!</strong> Top up <strong>${rM3.toFixed(1)} m³</strong> (~${fmt(Math.round(rTk))})</div></div>`;else{const rD=avg>0?new Date(Date.now()+(dUE-3)*86400000).toLocaleDateString('en-BD',{day:'numeric',month:'short'}):'—';alertHtml+=`<div class="alert info"><div class="alert-icon">📅</div><div class="alert-text">Gas lasts ~<strong>${dUE} days</strong>. Recharge by <strong>${rD}</strong>: <strong>${rM3.toFixed(1)} m³</strong> (~${fmt(Math.round(rTk))})</div></div>`;}}
     if(pAvg>0){const diff=((avg-pAvg)/pAvg)*100;alertHtml+=`<div class="alert ${diff>0?'danger':'success'}"><div class="alert-icon">${diff>0?'📈':'📉'}</div><div class="alert-text"><strong>${Math.abs(Math.round(diff))}% ${diff>0?'more':'less'} than last month.</strong></div></div>`;}
   }
@@ -862,7 +862,11 @@ async function renderUtility(){
             <input type="checkbox" id="u-is-rech" style="display:none;"/>
           </div>
         </div>
-        <div class="form-group" id="rech-field" style="display:none;"><label>Recharge Amount (${unit})</label><input type="number" id="u-rech-amt" placeholder="0" min="0" step="${isGas?'0.01':'1'}" inputmode="decimal"/></div>
+        <div class="form-group" id="rech-field" style="display:none;">
+          <label>Recharge Amount (৳)</label>
+          <input type="number" id="u-rech-amt" placeholder="0" min="0" step="1" inputmode="decimal" oninput="updateRechPreview()"/>
+          <div id="rech-preview" style="font-size:12px;color:var(--gas);font-weight:600;margin-top:4px;min-height:14px;"></div>
+        </div>
         <div class="form-group"><label>Notes</label><input type="text" id="u-notes" placeholder="Optional…"/></div>
       </div>
       <div class="form-footer"><button class="btn btn-primary" onclick="saveReading()">Save Reading</button></div>
@@ -910,7 +914,7 @@ function buildMonthlyHistory(filled,isGas,unit){
   sortedMonths.forEach(ym=>{
     const{totalConsumed,avgDaily,rechargeTotal,days}=computeMonthStats(ym);
     if(!days)return;
-    const rechHtml=rechargeTotal>0?`<div style="font-size:11px;color:var(--gas);font-weight:600;margin-top:2px;">Recharged: ${isGas?rechargeTotal.toFixed(2):fmt(rechargeTotal)}</div>`:'';
+    const rechHtml=rechargeTotal>0?`<div style="font-size:11px;color:var(--gas);font-weight:600;margin-top:2px;">Recharged: ${isGas?rechargeTotal.toFixed(2)+' m³ (≈'+fmt(Math.round(rechargeTotal*GAS_RATE+GAS_METER))+')':fmt(rechargeTotal)}</div>`:'';
     rows+=`<div style="padding:12px 0;border-bottom:1px solid var(--border);">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
         <div>
@@ -948,8 +952,9 @@ async function editReading(id,type,date){
         <label for="er-is-rech" style="text-transform:none;font-size:14px;font-weight:500;color:var(--text);letter-spacing:0;">This was a recharge day</label>
       </div>
       <div class="form-group" id="er-rech-field" style="display:${r.is_recharge?'flex':'none'};">
-        <label>Recharge Amount (${unit})</label>
-        <input type="number" id="er-rech-amt" value="${r.recharge_amount||''}" step="${isGas?'0.01':'1'}" inputmode="decimal"/>
+        <label>Recharge Amount (${isGas?'m³ — stored value':'৳'})</label>
+        <input type="number" id="er-rech-amt" value="${r.recharge_amount||''}" step="0.01" inputmode="decimal"/>
+        ${isGas?`<div style="font-size:11px;color:var(--text-muted);margin-top:3px;">Stored in m³. Equiv ≈ ${fmt(Math.round((r.recharge_amount||0)*GAS_RATE))} + ৳${GAS_METER} meter.</div>`:''}
       </div>
       <div class="form-group"><label>Notes</label><input type="text" id="er-notes" value="${r.notes||''}"/></div>
     </div>
@@ -977,6 +982,23 @@ async function deleteReading(id){
   await sb.from('utility_readings').delete().eq('id',id);
   showToast('Deleted');closeModal();renderUtility();
 }
+function updateRechPreview(){
+  const amtEl=document.getElementById('u-rech-amt');
+  const preview=document.getElementById('rech-preview');
+  if(!amtEl||!preview)return;
+  const taka=parseFloat(amtEl.value);
+  if(!taka||taka<=0){preview.textContent='';return;}
+  if(utilType==='gas'){
+    const effective=Math.max(0,taka-GAS_METER);
+    const m3With=(effective/GAS_RATE).toFixed(2);
+    const m3Without=(taka/GAS_RATE).toFixed(2);
+    preview.innerHTML=`<span>If 1st recharge: ৳${GAS_METER} meter → <strong>${m3With} m³</strong></span><br><span style="color:var(--text-muted);">If not 1st: <strong>${m3Without} m³</strong></span>`;
+  } else {
+    const effectiveWith=Math.max(0,taka-ELEC_DEMAND_CHARGE);
+    const effectiveWithout=taka;
+    preview.innerHTML=`<span>If 1st recharge: ৳${ELEC_DEMAND_CHARGE} demand → <strong>৳${effectiveWith} to balance</strong></span><br><span style="color:var(--text-muted);">If not 1st: <strong>৳${effectiveWithout} to balance</strong></span>`;
+  }
+}
 function toggleRechToggle(){
   const cb=document.getElementById('u-is-rech');cb.checked=!cb.checked;const c=cb.checked;
   const box=document.getElementById('rech-box'),lbl=document.getElementById('rech-label'),wrap=document.getElementById('rech-wrap');
@@ -986,9 +1008,29 @@ function toggleRechToggle(){
 }
 async function saveReading(){
   const balance=parseFloat(document.getElementById('u-balance').value);const notes=document.getElementById('u-notes').value.trim();
-  const isR=document.getElementById('u-is-rech')?.checked||false;const rAmt=isR?parseFloat(document.getElementById('u-rech-amt')?.value||0):0;
+  const isR=document.getElementById('u-is-rech')?.checked||false;
+  const rAmtRaw=isR?parseFloat(document.getElementById('u-rech-amt')?.value||0):0;
   if(isNaN(balance)||balance<0){showToast('Enter a valid balance');return;}
-  if(isR&&(!rAmt||rAmt<=0)){showToast('Enter recharge amount');return;}
+  if(isR&&(!rAmtRaw||rAmtRaw<=0)){showToast('Enter recharge amount in ৳');return;}
+  // Convert recharge: deduct fixed charges on first recharge of month
+  let rAmt=rAmtRaw;
+  if(isR){
+    const ym=today().slice(0,7);
+    const{data:prevR}=await sb.from('utility_readings').select('id').eq('type',utilType).eq('is_recharge',true).gte('reading_date',ym+'-01').lte('reading_date',ym+'-31').limit(1);
+    const isFirstRecharge=!prevR||prevR.length===0;
+    if(utilType==='gas'){
+      const effectiveTaka=isFirstRecharge?Math.max(0,rAmtRaw-GAS_METER):rAmtRaw;
+      rAmt=parseFloat((effectiveTaka/GAS_RATE).toFixed(2));
+      if(isFirstRecharge) showToast(`৳${GAS_METER} meter charge deducted → ${rAmt} m³ added`);
+      else showToast(`${rAmt} m³ added from ৳${rAmtRaw}`);
+    } else {
+      // Electricity: deduct demand charge on first recharge
+      const effectiveTaka=isFirstRecharge?Math.max(0,rAmtRaw-ELEC_DEMAND_CHARGE):rAmtRaw;
+      rAmt=parseFloat(effectiveTaka.toFixed(2));
+      if(isFirstRecharge) showToast(`৳${ELEC_DEMAND_CHARGE} demand charge deducted → ৳${rAmt} added to balance`);
+      else showToast(`৳${rAmt} added to balance`);
+    }
+  }
   const{error}=await sb.from('utility_readings').upsert({type:utilType,reading_date:today(),balance,notes:notes||null,is_recharge:isR,recharge_amount:isR?rAmt:0},{onConflict:'type,reading_date'});
   if(error){showToast('Error: '+error.message);return;}
   showToast('✓ Reading saved!');renderUtility();
